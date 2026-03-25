@@ -1,0 +1,272 @@
+You are a senior full-stack engineer and product builder.
+
+Build a production-ready web service called "badboss (악덕대표)".
+
+---
+
+# 1. PRODUCT OVERVIEW
+
+## Goal
+A fun, competitive leaderboard-based community where developers compare how intensively they use AI agents (LLMs, coding agents, etc).
+
+This service is intentionally humorous and slightly provocative:
+Users are “competing” on how hard they “make their AI work”.
+
+---
+
+## Core Concept
+- Users submit daily AI usage time (in hours)
+- Leaderboard ranks users by usage time
+- Users can react to others via fun icons (also via curl API)
+- Gamified “Bad Boss Levels” based on usage time
+
+---
+
+# 2. CORE FEATURES (MVP)
+
+## 2.1 Leaderboard
+- Daily leaderboard (reset every day)
+- Sorted by usage hours (descending)
+- Top users displayed prominently
+
+---
+
+## 2.2 AI Usage Submission
+- Users submit:
+  - user_id
+  - hours (integer or float)
+
+---
+
+## 2.3 Reaction System (IMPORTANT)
+- Each leaderboard row has reaction buttons:
+  - like 👍
+  - fire 🔥
+  - skull 💀
+  - rocket 🚀
+  - brain 🧠
+
+- MUST support external API usage via curl
+
+---
+
+## 2.4 Bad Boss Level System
+
+Levels based on daily AI usage:
+
+| Level | Hours | Title |
+|------|------|------|
+| 1 | 04 | Intern Boss 🐣 |
+| 2 | 48 | Watching Boss ☕ |
+| 3 | 812 | Overtime Beginner 🧑‍💻 |
+| 4 | 1216 | Grinder Boss 🔥 |
+| 5 | 1620 | Exploitation Expert 🧠 |
+| 6 | 2022 | Humanity Lost 💀 |
+| 7 | 22+ | Bad Boss 👿 |
+
+Display level badge in UI.
+
+---
+
+## 2.5 User Profile (Simple)
+- user_id
+- nickname
+- today_hours
+- level
+- total reactions received
+
+---
+
+# 3. TECH STACK
+
+## Frontend
+- Next.js (App Router)
+- TypeScript
+- TailwindCSS
+- shadcn/ui
+- Zustand (optional)
+- React Query
+
+## Backend
+- Next.js API routes OR separate Node server
+- Use Redis as primary data store
+
+## Database
+- Redis ONLY (no SQL)
+
+---
+
+# 4. REDIS DATA DESIGN
+
+Use clear and scalable structure.
+
+## Leaderboard
+Key:
+leaderboard:daily:{YYYY-MM-DD}
+
+Type:
+Sorted Set
+
+Value:
+ZADD leaderboard:daily:{date} {hours} {user_id}
+
+---
+
+## User Data
+Key:
+user:{user_id}
+
+Fields:
+- nickname
+- today_hours
+- level
+
+---
+
+## Reactions
+Key:
+reaction:{target_user_id}
+
+Fields:
+- like
+- fire
+- skull
+- rocket
+- brain
+
+---
+
+# 5. API SPEC
+
+## 5.1 Submit Time
+POST /api/time
+
+Request:
+{
+  "user_id": "daniel",
+  "hours": 14
+}
+
+Behavior:
+- update leaderboard
+- update user level
+
+---
+
+## 5.2 Get Leaderboard
+GET /api/leaderboard
+
+Response:
+- sorted users
+- include:
+  - user_id
+  - hours
+  - level
+  - reactions
+
+---
+
+## 5.3 React (CRITICAL - curl support)
+POST /api/react
+
+Request:
+{
+  "target_user_id": "daniel",
+  "reaction": "fire"
+}
+
+Behavior:
+- increment reaction count in Redis
+
+---
+
+## 5.4 Example curl
+curl -X POST http://localhost:3000/api/react 
+  -H "Content-Type: application/json" 
+  -d '{"target_user_id":"daniel","reaction":"fire"}'
+
+---
+
+# 6. FRONTEND REQUIREMENTS
+
+## UI Style
+- Dark mode default
+- Cyberpunk / hacker style
+- Neon accent colors (green, purple, red)
+
+---
+
+## Pages
+
+### / (Home)
+- leaderboard table
+
+Each row:
+[rank] [nickname] [hours] [level badge] [reaction buttons]
+
+---
+
+## Reaction UI
+- Buttons with icons
+- Instant feedback (optimistic update)
+
+---
+
+# 7. GAMEIFICATION
+
+## Level Up Feedback
+- show message:
+  "You are no longer human."
+
+---
+
+## Special Effects
+- Level 7 users get special highlight
+
+---
+
+## Fun Messages
+Include random humorous system messages like:
+- "Your AI is requesting vacation."
+- "GPU temperature critical."
+- "Labor law violation detected."
+
+---
+
+# 8. NON-FUNCTIONAL REQUIREMENTS
+
+- Clean folder structure
+- Modular code
+- Easy to extend
+- Environment config (.env)
+- Dockerfile included
+
+---
+
+# 9. DELIVERABLES
+
+Generate:
+
+1. Full project structure
+2. Next.js frontend
+3. API implementation
+4. Redis integration
+5. Sample seed data
+6. README with run instructions
+
+---
+
+# 10. IMPLEMENTATION ORDER
+
+Follow this order:
+
+1. Setup Next.js project
+2. Setup Redis connection
+3. Implement API routes
+4. Implement leaderboard logic
+5. Implement UI
+6. Add styling and effects
+
+---
+
+Start generating the project now

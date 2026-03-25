@@ -1,0 +1,148 @@
+/* BadBoss 사이버펑크 글로벌 스타일 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS 변수: shadcn/ui 다크 테마 + 사이버펑크 커스텀 */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 17% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 17% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 17% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 55%;
+    --accent: 240 5% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 12%;
+    --input: 240 5% 12%;
+    --ring: 142 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: #0a0a0f;
+    color: #e0e0e0;
+  }
+}
+
+/* 사이버펑크 배경 패턴: 원근법 그리드 */
+.cyber-grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+}
+
+/* 스캔라인 오버레이 (CRT 모니터 느낌) */
+.scanline-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* 네온 글로우 텍스트 효과 */
+.neon-glow-green {
+  text-shadow:
+    0 0 5px #00ff41,
+    0 0 10px #00ff41,
+    0 0 20px #00ff41;
+}
+
+.neon-glow-red {
+  text-shadow:
+    0 0 5px #ff0040,
+    0 0 10px #ff0040,
+    0 0 20px #ff0040;
+}
+
+.neon-glow-cyan {
+  text-shadow:
+    0 0 5px #00f0ff,
+    0 0 10px #00f0ff;
+}
+
+.neon-glow-purple {
+  text-shadow:
+    0 0 5px #bd00ff,
+    0 0 10px #bd00ff;
+}
+
+/* 커스텀 스크롤바: 네온 그린 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff4133;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00ff4166;
+}
+
+/* 선택 영역 색상 */
+::selection {
+  background: #00ff4133;
+  color: #00ff41;
+}
+
+/* 링크 기본 색상 */
+a {
+  color: #00f0ff;
+}
+
+a:hover {
+  color: #00f0ffcc;
+}
