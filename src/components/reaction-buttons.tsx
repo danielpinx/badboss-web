@@ -59,14 +59,15 @@ export function ReactionButtons({
   reactions: initialReactions,
   size = "sm",
 }: ReactionButtonsProps) {
+  // Hook 순서 고정: useState -> useState -> useRef -> useReaction -> useEffect
   const [reactions, setReactions] = useState<ReactionCounts>(initialReactions);
   const [particles, setParticles] = useState<
     { id: number; type: ReactionType }[]
   >([]);
+  const reactionsRef = useRef(reactions);
   const { sendReaction } = useReaction();
 
   // 최신 reactions를 ref로 유지 (stale closure 방지)
-  const reactionsRef = useRef(reactions);
   reactionsRef.current = reactions;
 
   // 서버 데이터 변경 시 동기화

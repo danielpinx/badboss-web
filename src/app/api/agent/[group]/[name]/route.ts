@@ -1,16 +1,51 @@
 // GET /api/agent/[group]/[name] - 에이전트 프로필 API
 import { NextRequest, NextResponse } from "next/server";
-import { getAgentProfile, RedisConnectionError } from "@/lib/redis";
-import { getTodayKST, isValidDateString } from "@/lib/utils";
+import { getAgentProfile, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { getTodayKST, isValidDateString, validateGroupName, validateAgentName, logSecurityEvent } from "@/lib/utils";
+import { GET_RATE_LIMIT_PER_MINUTE } from "@/lib/constants";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ group: string; name: string }> }
 ) {
   try {
-    const { group, name } = await params;
+    // M-2: GET 엔드포인트 Rate Limiting
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    const allowed = await checkRateLimit(ip, GET_RATE_LIMIT_PER_MINUTE);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+        { status: 429 }
+      );
+    }
+
+    const { group: rawGroup, name: rawName } = await params;
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date");
+
+    // M-1: decodeURIComponent 후 입력 검증
+    const group = decodeURIComponent(rawGroup);
+    const name = decodeURIComponent(rawName);
+
+    if (!validateGroupName(group)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "group", value: group });
+      return NextResponse.json(
+        { error: "group: 유효한 그룹명이 필요합니다." },
+        { status: 400 }
+      );
+    }
+
+    if (!validateAgentName(name)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "name", value: name });
+      return NextResponse.json(
+        { error: "name: 유효한 에이전트명이 필요합니다." },
+        { status: 400 }
+      );
+    }
 
     let date: string;
     if (dateParam) {
@@ -26,11 +61,7 @@ export async function GET(
     }
 
     // 에이전트 프로필 조회
-    const profile = await getAgentProfile(
-      decodeURIComponent(group),
-      decodeURIComponent(name),
-      date
-    );
+    const profile = await getAgentProfile(group, name, date);
 
     if (!profile) {
       return NextResponse.json(

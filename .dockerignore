@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+node_modules
+.next
+.bkit
+.claude
+*.md
+!README.md

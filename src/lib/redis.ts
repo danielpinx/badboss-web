@@ -10,7 +10,7 @@ import type {
   ReportEntry,
 } from "./types";
 import { getLevel } from "./levels";
-import { getTodayKST, sanitizeSummary } from "./utils";
+import { getTodayKST, sanitizeSummary, logSecurityEvent } from "./utils";
 import { VALID_REACTIONS, RATE_LIMIT_PER_MINUTE, RATE_LIMIT_TTL } from "./constants";
 
 // Redis 싱글턴 클라이언트 (핫 리로드 보호)
@@ -166,6 +166,12 @@ export async function submitReport(payload: ReportPayload): Promise<{
     // 보고 내역 추가
     pipeline.rpush(reportsKey(group, agent_name, date), JSON.stringify(reportEntry));
 
+    // M-7: 시간 기반 데이터에 TTL 설정 (7일)
+    const TTL_7_DAYS = 7 * 24 * 60 * 60;
+    pipeline.expire(leaderboardKey(date), TTL_7_DAYS);
+    pipeline.expire(groupLeaderboardKey(date), TTL_7_DAYS);
+    pipeline.expire(reportsKey(group, agent_name, date), TTL_7_DAYS);
+
     const results = await pipeline.exec();
 
     // pipeline.exec() 실패 시 결과가 null
@@ -294,14 +300,27 @@ export async function getLeaderboard(
 
 /**
  * 리액션을 추가한다.
- * @returns 업데이트된 리액션 카운트
+ * M-9: IP 기반 중복 제한 (같은 IP에서 같은 대상에 같은 리액션은 1분에 1회만 가능)
+ * @param ip - 요청 IP 주소 (중복 체크용)
+ * @returns 업데이트된 리액션 카운트 또는 null (중복 시)
  */
 export async function addReaction(
   group: string,
   agentName: string,
-  reaction: ReactionType
-): Promise<ReactionCounts> {
+  reaction: ReactionType,
+  ip?: string
+): Promise<ReactionCounts | null> {
   return withRedis(async () => {
+    // M-9: IP 기반 중복 체크
+    if (ip) {
+      const dupeKey = `reaction:ip:${ip}:${group}:${agentName}:${reaction}`;
+      const alreadyReacted = await redis.set(dupeKey, "1", "EX", 60, "NX");
+      if (alreadyReacted === null) {
+        // 이미 1분 내에 같은 리액션을 보냄
+        return null;
+      }
+    }
+
     await redis.hincrby(reactionKey(group, agentName), reaction, 1);
     return getReactions(group, agentName);
   });
@@ -388,24 +407,44 @@ export async function getAgentProfile(
   });
 }
 
+// M-3: Rate Limit Lua 스크립트 (원자적 INCR + EXPIRE 처리)
+const RATE_LIMIT_LUA_SCRIPT = `
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+return count
+`;
+
 /**
  * IP 기반 Rate Limit을 체크한다.
+ * M-3: Lua 스크립트로 원자적 처리 (레이스 컨디션 방지)
+ * L-2: Redis 장애 시 거부 정책 (보안 우선)
+ * @param ip - 클라이언트 IP 주소
+ * @param limit - 분당 최대 요청 수 (기본값: RATE_LIMIT_PER_MINUTE)
  * @returns true이면 요청 허용, false이면 제한 초과
  */
-export async function checkRateLimit(ip: string): Promise<boolean> {
+export async function checkRateLimit(
+  ip: string,
+  limit: number = RATE_LIMIT_PER_MINUTE
+): Promise<boolean> {
   try {
     const key = rateLimitKey(ip);
-    const current = await redis.incr(key);
+    const count = (await redis.eval(
+      RATE_LIMIT_LUA_SCRIPT,
+      1,
+      key,
+      RATE_LIMIT_TTL
+    )) as number;
 
-    // 첫 요청이면 TTL 설정
-    if (current === 1) {
-      await redis.expire(key, RATE_LIMIT_TTL);
+    if (count > limit) {
+      // M-10: Rate Limit 초과 시 보안 이벤트 로깅
+      logSecurityEvent("rate_limit_exceeded", { ip, count, limit });
+      return false;
     }
 
-    return current <= RATE_LIMIT_PER_MINUTE;
-  } catch {
-    // Redis 연결 실패 시 Rate Limit을 통과시킨다 (서비스 가용성 우선)
-    console.error("[Redis] Rate Limit 체크 실패 - 요청을 허용합니다.");
     return true;
+  } catch {
+    // L-2: Redis 장애 시 거부 정책 (보안 우선)
+    logSecurityEvent("rate_limit_redis_failure", { ip, action: "denied" });
+    return false;
   }
 }

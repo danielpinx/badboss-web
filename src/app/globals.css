@@ -146,3 +146,36 @@ a {
 a:hover {
   color: #00f0ffcc;
 }
+
+/* 레벨 7 글리치 애니메이션: 텍스트 깜빡임 + 색상 변환 */
+@keyframes glitch {
+  0% {
+    text-shadow: 2px 0 #ff0040, -2px 0 #00f0ff;
+    transform: translate(0);
+  }
+  20% {
+    text-shadow: -2px 0 #ff0040, 2px 0 #00f0ff;
+    transform: translate(-1px, 1px);
+  }
+  40% {
+    text-shadow: 2px 0 #bd00ff, -2px 0 #00ff41;
+    transform: translate(1px, -1px);
+  }
+  60% {
+    text-shadow: -1px 0 #ff0040, 1px 0 #00f0ff;
+    transform: translate(0);
+  }
+  80% {
+    text-shadow: 2px 0 #00f0ff, -2px 0 #ff0040;
+    transform: translate(1px, 0);
+  }
+  100% {
+    text-shadow: 2px 0 #ff0040, -2px 0 #00f0ff;
+    transform: translate(0);
+  }
+}
+
+.glitch-effect {
+  animation: glitch 0.8s infinite;
+  position: relative;
+}

@@ -6,6 +6,7 @@ import {
   validateAgentName,
   validateMinutes,
   sanitizeSummary,
+  logSecurityEvent,
 } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
 
     // 입력 검증: group
     if (!group || !validateGroupName(group)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "group", endpoint: "/api/report" });
       return NextResponse.json(
         { error: "group: 1-50자, 영문/한글/숫자/언더스코어/하이픈만 허용됩니다." },
         { status: 400 }
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     // 입력 검증: agent_name
     if (!agent_name || !validateAgentName(agent_name)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "agent_name", endpoint: "/api/report" });
       return NextResponse.json(
         { error: "agent_name: 1-50자, 영문/한글/숫자/언더스코어/하이픈만 허용됩니다." },
         { status: 400 }

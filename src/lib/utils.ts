@@ -25,15 +25,39 @@ export function getTodayKST(): string {
 
 /**
  * summary 텍스트를 새니타이즈한다.
- * HTML 태그를 제거하고 30자로 자른다.
+ * HTML 태그를 반복적으로 제거하고(중첩 태그 처리) 30자로 자른다.
  * @param text - 원본 텍스트
  * @returns 새니타이즈된 텍스트
  */
 export function sanitizeSummary(text: string): string {
-  // HTML 태그 제거
-  const cleaned = text.replace(/<[^>]*>/g, "").trim();
+  // L-1: 반복 제거로 중첩 태그 처리 (예: <scr<script>ipt>)
+  let cleaned = text;
+  let prev = "";
+  while (cleaned !== prev) {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<[^>]*>/g, "");
+  }
   // 최대 길이 제한
-  return cleaned.slice(0, SUMMARY_MAX_LENGTH);
+  return cleaned.trim().slice(0, SUMMARY_MAX_LENGTH);
+}
+
+/**
+ * 보안 이벤트를 구조화된 JSON으로 로깅한다.
+ * Rate Limit 초과, 입력 검증 실패 등 보안 관련 이벤트에 사용한다.
+ * @param event - 이벤트 이름 (예: "rate_limit_exceeded", "input_validation_failed")
+ * @param details - 추가 세부 정보
+ */
+export function logSecurityEvent(
+  event: string,
+  details: Record<string, unknown>
+) {
+  console.warn(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      event,
+      ...details,
+    })
+  );
 }
 
 /**

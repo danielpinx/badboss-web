@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
 
   // HTTP 보안 헤더 설정
   async headers() {
+    // CORS origin: 환경변수로 분기 (기본값 * 유지, 프로덕션에서 변경 가능)
+    const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
+
     return [
       {
         source: "/(.*)",
@@ -30,6 +33,27 @@ const nextConfig: NextConfig = {
             key: "X-DNS-Prefetch-Control",
             value: "on",
           },
+          // H-2: HSTS 헤더
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
+          // H-2: Content-Security-Policy (Next.js 호환)
+          {
+            key: "Content-Security-Policy",
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
+          },
+          // H-2: Cross-Origin-Opener-Policy
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          // H-2: Cross-Origin-Embedder-Policy (credentialless: 폰트 로딩 호환)
+          {
+            key: "Cross-Origin-Embedder-Policy",
+            value: "credentialless",
+          },
         ],
       },
       {
@@ -37,8 +61,9 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         headers: [
           {
+            // H-1: 환경변수로 CORS origin 분기
             key: "Access-Control-Allow-Origin",
-            value: "*",
+            value: allowedOrigin,
           },
           {
             key: "Access-Control-Allow-Methods",

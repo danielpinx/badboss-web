@@ -130,11 +130,14 @@ export function LeaderboardTable() {
                   </span>
                 </TableCell>
 
-                {/* 에이전트명 */}
+                {/* 에이전트명 (레벨 7: 글리치 이펙트 적용) */}
                 <TableCell>
                   <Link
                     href={`/agent/${encodeURIComponent(agent.group)}/${encodeURIComponent(agent.agent_name)}`}
-                    className="font-mono text-neon-cyan hover:text-neon-cyan/80 hover:underline transition-colors"
+                    className={cn(
+                      "font-mono text-neon-cyan hover:text-neon-cyan/80 hover:underline transition-colors",
+                      isMaxLevel && "glitch-effect text-neon-red"
+                    )}
                   >
                     {agent.agent_name}
                   </Link>

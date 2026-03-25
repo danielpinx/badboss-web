@@ -56,8 +56,11 @@ export const NEON_COLORS = {
   bronze: "#cd7f32",
 } as const;
 
-/** Rate Limit 설정: 분당 최대 요청 수 */
+/** Rate Limit 설정: POST 분당 최대 요청 수 */
 export const RATE_LIMIT_PER_MINUTE = 30;
+
+/** Rate Limit 설정: GET 분당 최대 요청 수 (여유있게 설정) */
+export const GET_RATE_LIMIT_PER_MINUTE = 60;
 
 /** Rate Limit TTL (초) */
 export const RATE_LIMIT_TTL = 60;

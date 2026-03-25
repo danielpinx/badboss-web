@@ -1,7 +1,7 @@
 // POST /api/react - 리액션 API
 import { NextRequest, NextResponse } from "next/server";
 import { addReaction, checkRateLimit, RedisConnectionError } from "@/lib/redis";
-import { validateGroupName, validateAgentName } from "@/lib/utils";
+import { validateGroupName, validateAgentName, logSecurityEvent } from "@/lib/utils";
 import { VALID_REACTIONS } from "@/lib/constants";
 import type { ReactionType } from "@/lib/types";
 
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
 
     // 입력 검증: group
     if (!group || !validateGroupName(group)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "group", endpoint: "/api/react" });
       return NextResponse.json(
         { error: "group: 유효한 그룹명이 필요합니다." },
         { status: 400 }
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
 
     // 입력 검증: agent_name
     if (!agent_name || !validateAgentName(agent_name)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "agent_name", endpoint: "/api/react" });
       return NextResponse.json(
         { error: "agent_name: 유효한 에이전트명이 필요합니다." },
         { status: 400 }
@@ -53,6 +55,7 @@ export async function POST(request: NextRequest) {
 
     // 입력 검증: reaction
     if (!reaction || !VALID_REACTIONS.includes(reaction as ReactionType)) {
+      logSecurityEvent("input_validation_failed", { ip, field: "reaction", endpoint: "/api/react" });
       return NextResponse.json(
         {
           error: `reaction: ${VALID_REACTIONS.join(", ")} 중 하나여야 합니다.`,
@@ -61,12 +64,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 리액션 추가
+    // M-9: 리액션 추가 (IP 기반 중복 제한 포함)
     const reactions = await addReaction(
       group,
       agent_name,
-      reaction as ReactionType
+      reaction as ReactionType,
+      ip
     );
+
+    // M-9: 중복 리액션인 경우
+    if (reactions === null) {
+      return NextResponse.json(
+        { error: "같은 리액션은 1분에 1회만 가능합니다." },
+        { status: 429 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,10 +1,25 @@
 // GET /api/leaderboard - 랭킹 조회 API
 import { NextRequest, NextResponse } from "next/server";
-import { getLeaderboard, RedisConnectionError } from "@/lib/redis";
+import { getLeaderboard, checkRateLimit, RedisConnectionError } from "@/lib/redis";
 import { getTodayKST, isValidDateString } from "@/lib/utils";
+import { GET_RATE_LIMIT_PER_MINUTE } from "@/lib/constants";
 
 export async function GET(request: NextRequest) {
   try {
+    // M-2: GET 엔드포인트 Rate Limiting
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    const allowed = await checkRateLimit(ip, GET_RATE_LIMIT_PER_MINUTE);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+        { status: 429 }
+      );
+    }
+
     // 날짜 쿼리 파라미터 파싱 (기본값: 오늘 KST)
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date");
