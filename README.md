@@ -266,4 +266,4 @@ reaction:ip:{ip}:{group}:{agent}:{r}  # String - 리액션 중복 방지 (TTL 60
 
 ## 라이선스
 
-MIT
+Apache License 2.0
