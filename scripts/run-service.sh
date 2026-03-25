@@ -32,6 +32,22 @@ case "$MODE" in
     npm run build
     echo "[완료] .next/ 디렉토리에 빌드 완료"
     ;;
+  deploy)
+    echo "=== BadBoss 프로덕션 배포 ==="
+    npm run build
+    # standalone 모드는 정적 파일을 포함하지 않으므로 수동 복사 필요
+    cp -r .next/static .next/standalone/.next/static
+    cp -r public .next/standalone/public
+    echo "[완료] standalone 정적 파일 복사 완료"
+    # PM2 프로세스 재시작
+    if command -v pm2 &>/dev/null; then
+      pm2 restart badboss 2>/dev/null || pm2 start .next/standalone/server.js --name badboss
+      echo "[완료] PM2 서비스 재시작 완료"
+    else
+      echo "[안내] PM2가 설치되지 않았습니다. 수동으로 서버를 시작하세요:"
+      echo "  node .next/standalone/server.js"
+    fi
+    ;;
   start)
     echo "=== BadBoss 프로덕션 서버 시작 ==="
     check_redis
@@ -53,6 +69,7 @@ case "$MODE" in
     echo ""
     echo "  dev    - 개발 서버 시작 (기본값)"
     echo "  build  - 프로덕션 빌드"
+    echo "  deploy - 프로덕션 빌드 + 정적 파일 복사 + PM2 재시작"
     echo "  start  - 프로덕션 서버 시작"
     echo "  docker - Docker Compose로 전체 환경 시작"
     echo "  seed   - 샘플 데이터 투입"
