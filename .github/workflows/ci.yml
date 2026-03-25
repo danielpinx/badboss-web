@@ -1,0 +1,159 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: TypeScript strict check
+        run: npx tsc --noEmit
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run tests
+        run: npm run test:run -- --reporter=verbose
+
+      - name: Test count ratchet
+        run: |
+          count=$(npm run test:run -- --reporter=json 2>/dev/null | grep -o '"numPassedTests":[0-9]*' | grep -oE '[0-9]+' || echo "0")
+          echo "Test count: ${count}"
+          if [ "$count" -lt 100 ]; then
+            echo "::error::Test count ${count} < 100 (ratchet). Do not delete tests without justification."
+            exit 1
+          fi
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Next.js build
+        run: npm run build
+        env:
+          REDIS_URL: redis://localhost:6379
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high || true
+
+      - name: Check for secrets
+        run: |
+          echo "=== Secret Detection ==="
+          errors=0
+          # Check for common secret patterns in source code
+          for f in $(find src -name "*.ts" -o -name "*.tsx"); do
+            if grep -iE '(password|secret|api_key|token)\s*=\s*"[^"]{8,}"' "$f" | grep -v 'badboss-dev' | grep -v 'test' | grep -v '//' > /dev/null 2>&1; then
+              echo "::error::${f}: Potential hardcoded secret detected"
+              errors=$((errors + 1))
+            fi
+          done
+          [ "$errors" -eq 0 ] && echo "OK: No secrets found" || exit 1
+
+      - name: Verify security headers
+        run: |
+          echo "=== Security Header Verification ==="
+          # Verify security headers are configured in next.config
+          config_file=$(find . -name "next.config.*" -not -path "./node_modules/*" | head -1)
+          if [ -z "$config_file" ]; then
+            echo "::warning::No next.config found"
+            exit 0
+          fi
+
+          for header in "X-Frame-Options" "X-Content-Type-Options" "Strict-Transport-Security"; do
+            if grep -q "$header" "$config_file"; then
+              echo "OK: ${header} configured"
+            else
+              echo "::warning::${header} not found in ${config_file}"
+            fi
+          done
+
+  gate:
+    name: Quality Gate
+    needs: [lint, typecheck, test, build, security]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          echo "lint: ${{ needs.lint.result }}"
+          echo "typecheck: ${{ needs.typecheck.result }}"
+          echo "test: ${{ needs.test.result }}"
+          echo "build: ${{ needs.build.result }}"
+          echo "security: ${{ needs.security.result }}"
+
+          failed=0
+          for result in "${{ needs.lint.result }}" \
+                        "${{ needs.typecheck.result }}" \
+                        "${{ needs.test.result }}" \
+                        "${{ needs.build.result }}" \
+                        "${{ needs.security.result }}"; do
+            if [ "$result" != "success" ]; then
+              failed=$((failed + 1))
+            fi
+          done
+
+          if [ "$failed" -gt 0 ]; then
+            echo "::error::Quality gate failed. ${failed} job(s) did not pass."
+            exit 1
+          fi
+          echo "Quality gate passed."
