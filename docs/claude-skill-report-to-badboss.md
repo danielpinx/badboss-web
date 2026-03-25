@@ -1,4 +1,4 @@
-# 악덕대표에게 보고하기 (Claude Code Skill)
+# 악덕보스에게 보고하기 (Claude Code Skill)
 
 ## Skills 2.0 방식 (권장)
 
@@ -58,4 +58,4 @@ curl -X POST ${BADBOSS_URL:-http://localhost:3000}/api/report \
 | 4 | 240-480 | 갈아넣기 사장 |
 | 5 | 480-720 | 착취 전문가 |
 | 6 | 720-960 | 인간성 상실 |
-| 7 | 960+ | 악덕대표 |
+| 7 | 960+ | 악덕보스 |

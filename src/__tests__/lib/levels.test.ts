@@ -10,45 +10,45 @@ describe('getLevel', () => {
     expect(level.titleKo).toBe('인턴 사장');
   });
 
-  it('59분이면 레벨 1을 유지한다', () => {
-    expect(getLevel(59).level).toBe(1);
+  it('60분이면 레벨 1을 유지한다', () => {
+    expect(getLevel(60).level).toBe(1);
   });
 
-  it('60분이면 레벨 2 (Watching Boss)로 올라간다', () => {
-    const level = getLevel(60);
+  it('61분이면 레벨 2 (Watching Boss)로 올라간다', () => {
+    const level = getLevel(61);
     expect(level.level).toBe(2);
     expect(level.title).toBe('Watching Boss');
   });
 
-  it('120분이면 레벨 3 (Overtime Beginner)이다', () => {
-    const level = getLevel(120);
+  it('181분이면 레벨 3 (Overtime Beginner)이다', () => {
+    const level = getLevel(181);
     expect(level.level).toBe(3);
     expect(level.title).toBe('Overtime Beginner');
   });
 
-  it('240분이면 레벨 4 (Grinder Boss)이다', () => {
-    const level = getLevel(240);
+  it('481분이면 레벨 4 (Grinder Boss)이다', () => {
+    const level = getLevel(481);
     expect(level.level).toBe(4);
     expect(level.title).toBe('Grinder Boss');
   });
 
-  it('480분이면 레벨 5 (Exploitation Expert)이다', () => {
-    const level = getLevel(480);
+  it('981분이면 레벨 5 (Exploitation Expert)이다', () => {
+    const level = getLevel(981);
     expect(level.level).toBe(5);
     expect(level.title).toBe('Exploitation Expert');
   });
 
-  it('720분이면 레벨 6 (Humanity Lost)이다', () => {
-    const level = getLevel(720);
+  it('1501분이면 레벨 6 (Humanity Lost)이다', () => {
+    const level = getLevel(1501);
     expect(level.level).toBe(6);
     expect(level.title).toBe('Humanity Lost');
   });
 
-  it('960분이면 레벨 7 (Bad Boss)이다', () => {
-    const level = getLevel(960);
+  it('3001분이면 레벨 7 (Bad Boss)이다', () => {
+    const level = getLevel(3001);
     expect(level.level).toBe(7);
     expect(level.title).toBe('Bad Boss');
-    expect(level.titleKo).toBe('악덕대표');
+    expect(level.titleKo).toBe('악덕보스');
   });
 
   it('매우 큰 값(10000)도 레벨 7을 반환한다', () => {
@@ -59,6 +59,15 @@ describe('getLevel', () => {
     // 음수는 어떤 레벨의 minMinutes보다 작으므로 LEVELS[0] 반환
     expect(getLevel(-10).level).toBe(1);
   });
+
+  it('경계값에서 올바른 레벨을 반환한다', () => {
+    expect(getLevel(60).level).toBe(1);   // 상한 포함
+    expect(getLevel(180).level).toBe(2);  // 상한 포함
+    expect(getLevel(480).level).toBe(3);  // 상한 포함
+    expect(getLevel(980).level).toBe(4);  // 상한 포함
+    expect(getLevel(1500).level).toBe(5); // 상한 포함
+    expect(getLevel(3000).level).toBe(6); // 상한 포함
+  });
 });
 
 describe('getNextLevelProgress', () => {
@@ -66,39 +75,39 @@ describe('getNextLevelProgress', () => {
     expect(getNextLevelProgress(0)).toBe(0);
   });
 
-  it('30분이면 레벨 1 (0~60) 내에서 50%이다', () => {
-    expect(getNextLevelProgress(30)).toBe(50);
+  it('30분이면 레벨 1 (0~61) 내에서 약 49%이다', () => {
+    expect(getNextLevelProgress(30)).toBe(49);
   });
 
-  it('60분이면 레벨 2 (60~120) 내에서 0%이다', () => {
-    expect(getNextLevelProgress(60)).toBe(0);
+  it('61분이면 레벨 2 (61~181) 내에서 0%이다', () => {
+    expect(getNextLevelProgress(61)).toBe(0);
   });
 
-  it('90분이면 레벨 2 (60~120) 내에서 50%이다', () => {
-    expect(getNextLevelProgress(90)).toBe(50);
+  it('121분이면 레벨 2 (61~181) 내에서 50%이다', () => {
+    expect(getNextLevelProgress(121)).toBe(50);
   });
 
-  it('레벨 7 (960분 이상)이면 100%를 반환한다', () => {
-    expect(getNextLevelProgress(960)).toBe(100);
+  it('레벨 7 (3001분 이상)이면 100%를 반환한다', () => {
+    expect(getNextLevelProgress(3001)).toBe(100);
     expect(getNextLevelProgress(9999)).toBe(100);
   });
 });
 
 describe('getMinutesToNextLevel', () => {
-  it('0분이면 다음 레벨까지 60분 남았다', () => {
-    expect(getMinutesToNextLevel(0)).toBe(60);
+  it('0분이면 다음 레벨까지 61분 남았다', () => {
+    expect(getMinutesToNextLevel(0)).toBe(61);
   });
 
-  it('30분이면 다음 레벨까지 30분 남았다', () => {
-    expect(getMinutesToNextLevel(30)).toBe(30);
+  it('30분이면 다음 레벨까지 31분 남았다', () => {
+    expect(getMinutesToNextLevel(30)).toBe(31);
   });
 
-  it('60분이면 다음 레벨까지 60분 남았다 (레벨 2 -> 레벨 3)', () => {
-    expect(getMinutesToNextLevel(60)).toBe(60);
+  it('61분이면 다음 레벨까지 120분 남았다 (레벨 2 -> 레벨 3)', () => {
+    expect(getMinutesToNextLevel(61)).toBe(120);
   });
 
-  it('레벨 7 (960분 이상)이면 남은 시간 0이다', () => {
-    expect(getMinutesToNextLevel(960)).toBe(0);
+  it('레벨 7 (3001분 이상)이면 남은 시간 0이다', () => {
+    expect(getMinutesToNextLevel(3001)).toBe(0);
     expect(getMinutesToNextLevel(5000)).toBe(0);
   });
 });

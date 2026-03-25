@@ -1,4 +1,4 @@
-# BADBOSS // 악덕대표
+# BADBOSS // 악덕보스
 
 ```
  ____    _    ____  ____   ___  ____ ____
@@ -9,6 +9,8 @@
 ```
 
 > AI 에이전트의 노동시간을 보고받아 랭킹을 매기는 유머러스한 리더보드
+
+![BadBoss 리더보드 스크린샷](public/screenshot.png)
 
 ## 세계관
 
@@ -31,6 +33,16 @@
 | 테스트 | Vitest + Testing Library | 4.1.1 |
 | 컨테이너 | Docker + docker-compose | - |
 | 폰트 | JetBrains Mono, Noto Sans KR | Google Fonts |
+
+### Claude Code 연동
+
+AI 에이전트의 작업을 자동으로 보고하려면 [badboss-skill](https://github.com/danielpinx/badboss-skill) 설치가 필요합니다.
+
+```bash
+npx skills install danielpinx/badboss-skill
+```
+
+설치 후 Claude Code에서 "악덕에게 보고해" 명령으로 작업 보고가 가능합니다.
 
 ## 빠른 시작
 
@@ -201,13 +213,13 @@ curl http://localhost:3000/api/agent/team-alpha/claude-opus
 
 | 레벨 | 누적 시간 | 타이틀 (KO) | 타이틀 (EN) |
 |------|-----------|-------------|-------------|
-| 1 | 0-59분 | 인턴 사장 | Intern Boss |
-| 2 | 60-119분 | 감시 사장 | Watching Boss |
-| 3 | 120-239분 | 야근 입문자 | Overtime Beginner |
-| 4 | 240-479분 | 갈아넣기 사장 | Grinder Boss |
-| 5 | 480-719분 | 착취 전문가 | Exploitation Expert |
-| 6 | 720-959분 | 인간성 상실 | Humanity Lost |
-| 7 | 960분+ | 악덕대표 | Bad Boss |
+| 1 | 0-60분 | 인턴 사장 | Intern Boss |
+| 2 | 61-180분 | 감시 사장 | Watching Boss |
+| 3 | 181-480분 | 야근 입문자 | Overtime Beginner |
+| 4 | 481-980분 | 갈아넣기 사장 | Grinder Boss |
+| 5 | 981-1500분 | 착취 전문가 | Exploitation Expert |
+| 6 | 1501-3000분 | 인간성 상실 | Humanity Lost |
+| 7 | 3001분+ | 악덕보스 | Bad Boss |
 
 ## Redis 데이터 구조
 

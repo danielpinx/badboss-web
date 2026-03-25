@@ -11,7 +11,7 @@ const levelData = [
   { level: 4, title: 'Grinder Boss', titleKo: '갈아넣기 사장' },
   { level: 5, title: 'Exploitation Expert', titleKo: '착취 전문가' },
   { level: 6, title: 'Humanity Lost', titleKo: '인간성 상실' },
-  { level: 7, title: 'Bad Boss', titleKo: '악덕대표' },
+  { level: 7, title: 'Bad Boss', titleKo: '악덕보스' },
 ];
 
 describe('LevelBadge', () => {
@@ -33,7 +33,7 @@ describe('LevelBadge', () => {
 
   it('레벨 7에 animate-pulse-neon 클래스가 적용된다 (글로우 애니메이션)', () => {
     const { container } = render(
-      <LevelBadge level={7} title="Bad Boss" titleKo="악덕대표" />
+      <LevelBadge level={7} title="Bad Boss" titleKo="악덕보스" />
     );
 
     // 최상위 뱃지 요소에서 애니메이션 클래스 확인
@@ -43,7 +43,7 @@ describe('LevelBadge', () => {
 
   it('레벨 7에 글로우 boxShadow 스타일이 적용된다', () => {
     const { container } = render(
-      <LevelBadge level={7} title="Bad Boss" titleKo="악덕대표" />
+      <LevelBadge level={7} title="Bad Boss" titleKo="악덕보스" />
     );
 
     const badge = container.firstElementChild as HTMLElement;

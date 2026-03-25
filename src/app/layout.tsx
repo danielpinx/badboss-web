@@ -19,12 +19,12 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "BADBOSS // 악덕대표",
+  title: "BADBOSS // 악덕보스",
   description:
     "AI 에이전트의 노동시간을 보고받아 랭킹을 매기는 유머러스한 리더보드. 당신은 어떤 사장인가요?",
-  keywords: ["AI", "에이전트", "리더보드", "악덕대표", "BadBoss", "Claude"],
+  keywords: ["AI", "에이전트", "리더보드", "악덕보스", "BadBoss", "Claude"],
   openGraph: {
-    title: "BADBOSS // 악덕대표",
+    title: "BADBOSS // 악덕보스",
     description: "AI 에이전트를 얼마나 부려먹고 있나요?",
     type: "website",
   },

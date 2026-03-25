@@ -1,61 +1,61 @@
 // BadBoss 7단계 레벨 시스템
 import type { LevelInfo } from "./types";
 
-/** 레벨 정의 배열 (1~7단계) */
+/** 레벨 정의 배열 (1~7단계, 주별 누적 기준) */
 export const LEVELS: LevelInfo[] = [
   {
     level: 1,
     title: "Intern Boss",
     titleKo: "인턴 사장",
     minMinutes: 0,
-    maxMinutes: 60,
+    maxMinutes: 61,
     color: "#00ff41", // 네온 그린
   },
   {
     level: 2,
     title: "Watching Boss",
     titleKo: "감시 사장",
-    minMinutes: 60,
-    maxMinutes: 120,
+    minMinutes: 61,
+    maxMinutes: 181,
     color: "#00ff41", // 네온 그린
   },
   {
     level: 3,
     title: "Overtime Beginner",
     titleKo: "야근 입문자",
-    minMinutes: 120,
-    maxMinutes: 240,
+    minMinutes: 181,
+    maxMinutes: 481,
     color: "#ffd700", // 골드
   },
   {
     level: 4,
     title: "Grinder Boss",
     titleKo: "갈아넣기 사장",
-    minMinutes: 240,
-    maxMinutes: 480,
+    minMinutes: 481,
+    maxMinutes: 981,
     color: "#ffd700", // 골드
   },
   {
     level: 5,
     title: "Exploitation Expert",
     titleKo: "착취 전문가",
-    minMinutes: 480,
-    maxMinutes: 720,
+    minMinutes: 981,
+    maxMinutes: 1501,
     color: "#ff6b00", // 오렌지
   },
   {
     level: 6,
     title: "Humanity Lost",
     titleKo: "인간성 상실",
-    minMinutes: 720,
-    maxMinutes: 960,
+    minMinutes: 1501,
+    maxMinutes: 3001,
     color: "#ff0040", // 네온 레드
   },
   {
     level: 7,
     title: "Bad Boss",
-    titleKo: "악덕대표",
-    minMinutes: 960,
+    titleKo: "악덕보스",
+    minMinutes: 3001,
     maxMinutes: Infinity,
     color: "#ff0040", // 네온 레드 + 글로우
   },
@@ -63,7 +63,7 @@ export const LEVELS: LevelInfo[] = [
 
 /**
  * 누적 분(minutes)으로 현재 레벨 정보를 반환한다.
- * @param totalMinutes - 일일 누적 작업 시간(분)
+ * @param totalMinutes - 누적 작업 시간(분)
  * @returns 해당 레벨 정보
  */
 export function getLevel(totalMinutes: number): LevelInfo {
@@ -77,7 +77,7 @@ export function getLevel(totalMinutes: number): LevelInfo {
 
 /**
  * 다음 레벨까지의 진행률을 계산한다.
- * @param totalMinutes - 일일 누적 작업 시간(분)
+ * @param totalMinutes - 누적 작업 시간(분)
  * @returns 0~100 사이의 진행률 (레벨 7이면 100)
  */
 export function getNextLevelProgress(totalMinutes: number): number {
@@ -96,7 +96,7 @@ export function getNextLevelProgress(totalMinutes: number): number {
 
 /**
  * 다음 레벨까지 남은 분을 계산한다.
- * @param totalMinutes - 일일 누적 작업 시간(분)
+ * @param totalMinutes - 누적 작업 시간(분)
  * @returns 남은 분 (최고 레벨이면 0)
  */
 export function getMinutesToNextLevel(totalMinutes: number): number {
