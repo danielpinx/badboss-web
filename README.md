@@ -79,6 +79,7 @@ npm run dev
 # 서비스 실행
 ./scripts/run-service.sh dev      # 개발 서버
 ./scripts/run-service.sh build    # 프로덕션 빌드
+./scripts/run-service.sh deploy   # 빌드 + 정적 파일 복사 + PM2 재시작
 ./scripts/run-service.sh start    # 프로덕션 서버
 ./scripts/run-service.sh docker   # Docker Compose 시작
 ./scripts/run-service.sh seed     # 시드 데이터 투입
