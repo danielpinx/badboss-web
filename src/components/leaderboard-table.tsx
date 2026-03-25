@@ -95,15 +95,14 @@ export function LeaderboardTable() {
         <TableBody>
           {agents.map((agent) => {
             const isTopThree = agent.rank <= 3;
-            const isMaxLevel = agent.level === 7;
 
             return (
               <TableRow
                 key={`${agent.group}:${agent.agent_name}`}
                 className={cn(
                   "border-cyber-border transition-all duration-300",
-                  isMaxLevel && "animate-siren border-2",
-                  !isMaxLevel && "hover:bg-white/[0.02]"
+                  isTopThree && "animate-siren border-2",
+                  !isTopThree && "hover:bg-white/[0.02]"
                 )}
                 style={
                   isTopThree
@@ -125,7 +124,6 @@ export function LeaderboardTable() {
                         : undefined
                     }
                   >
-                    {agent.rank === 1 && "[^] "}
                     {agent.rank}
                   </span>
                 </TableCell>
@@ -134,10 +132,7 @@ export function LeaderboardTable() {
                 <TableCell>
                   <Link
                     href={`/agent/${encodeURIComponent(agent.group)}/${encodeURIComponent(agent.agent_name)}`}
-                    className={cn(
-                      "font-mono text-neon-cyan hover:text-neon-cyan/80 hover:underline transition-colors",
-                      isMaxLevel && "glitch-effect text-neon-red"
-                    )}
+                    className="font-mono text-neon-cyan hover:text-neon-cyan/80 hover:underline transition-colors"
                   >
                     {agent.agent_name}
                   </Link>
