@@ -208,20 +208,26 @@ export async function getLeaderboard(
   return withRedis(async () => {
     const targetDate = date || getTodayKST();
 
-    // 에이전트 랭킹 조회 (점수 높은 순)
+    // 에이전트 랭킹 조회 (점수 높은 순, 최대 100명)
     const agentResults = await redis.zrevrangebyscore(
       leaderboardKey(targetDate),
       "+inf",
       "-inf",
-      "WITHSCORES"
+      "WITHSCORES",
+      "LIMIT",
+      0,
+      100
     );
 
-    // 그룹 랭킹 조회
+    // 그룹 랭킹 조회 (최대 10개)
     const groupResults = await redis.zrevrangebyscore(
       groupLeaderboardKey(targetDate),
       "+inf",
       "-inf",
-      "WITHSCORES"
+      "WITHSCORES",
+      "LIMIT",
+      0,
+      10
     );
 
     // 에이전트 목록 파싱
