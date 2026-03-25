@@ -60,9 +60,31 @@ export default function HomePage() {
         </TabsContent>
       </Tabs>
 
-      {/* curl 사용법 (접이식) */}
-      <div className="mt-8">
-        <CurlGuide />
+      {/* curl 사용법 (localhost에서만 표시) */}
+      <CurlGuide />
+
+      {/* 스킬 설치 안내 */}
+      <div className="mt-8 border border-cyber-border rounded-lg bg-cyber-surface/30 px-4 py-4">
+        <p className="font-mono text-sm text-neon-cyan mb-2">
+          <span className="text-neon-purple mr-2">&gt;</span>
+          Claude Code에서 바로 보고하기
+        </p>
+        <p className="font-mono text-xs text-gray-400 mb-3">
+          badboss-skill을 설치하면 Claude Code에서 &quot;악덕에게 보고해&quot; 한마디로 작업을 보고할 수 있습니다.
+        </p>
+        <div className="bg-black/50 rounded-md p-3 overflow-x-auto">
+          <code className="text-xs font-mono text-gray-300">
+            npx skills install danielpinx/badboss-skill
+          </code>
+        </div>
+        <a
+          href="https://github.com/danielpinx/badboss-skill"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-3 font-mono text-xs text-neon-green hover:text-neon-green/80 hover:underline transition-colors"
+        >
+          github.com/danielpinx/badboss-skill →
+        </a>
       </div>
 
       {/* 푸터 */}

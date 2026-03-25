@@ -1,7 +1,7 @@
-// curl 사용법 안내 컴포넌트 (접이식)
+// curl 사용법 안내 컴포넌트 (접이식, localhost에서만 표시)
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,13 +35,21 @@ const CURL_EXAMPLES = [
 
 /**
  * curl API 사용법을 접이식으로 보여주는 컴포넌트.
- * 각 예시에 복사 버튼이 포함된다.
+ * localhost 환경에서만 렌더링된다.
  */
 export function CurlGuide() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLocalhost, setIsLocalhost] = useState(false);
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setIsLocalhost(hostname === "localhost" || hostname === "127.0.0.1");
+  }, []);
+
+  if (!isLocalhost) return null;
 
   return (
-    <div className="w-full border border-cyber-border rounded-lg overflow-hidden bg-cyber-surface/30">
+    <div className="mt-8 w-full border border-cyber-border rounded-lg overflow-hidden bg-cyber-surface/30">
       {/* 토글 헤더 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
