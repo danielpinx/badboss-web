@@ -16,7 +16,7 @@ const CURL_EXAMPLES = [
   },
   {
     title: "리더보드 조회",
-    description: "오늘의 랭킹을 확인합니다.",
+    description: "이번 주 랭킹을 확인합니다.",
     command: `curl http://localhost:3000/api/leaderboard`,
   },
   {
