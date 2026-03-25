@@ -113,7 +113,7 @@ describe('GET /api/leaderboard', () => {
     expect(data.groups).toEqual([]);
   });
 
-  it('date 파라미터가 없으면 오늘 날짜로 조회한다', async () => {
+  it('date 파라미터가 없으면 이번 주 화요일 날짜로 조회한다', async () => {
     vi.mocked(getLeaderboard).mockResolvedValue(emptyLeaderboard);
 
     const request = createRequest();
@@ -122,6 +122,11 @@ describe('GET /api/leaderboard', () => {
 
     expect(response.status).toBe(200);
     expect(data.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    // 반환된 날짜가 화요일인지 검증
+    const [year, month, day] = data.date.split('-').map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    expect(dateObj.getDay()).toBe(2); // 0=일, 2=화
   });
 
   it('Rate Limit 초과 시 429를 반환한다', async () => {

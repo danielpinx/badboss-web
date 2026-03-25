@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
 
   // HTTP 보안 헤더 설정
   async headers() {
-    // CORS origin: 환경변수로 분기 (기본값 * 유지, 프로덕션에서 변경 가능)
-    const allowedOrigin = process.env.ALLOWED_ORIGIN || "*";
+    // CORS origin: 환경변수로 분기 (H-1: 기본값 없음, 반드시 명시적 설정 필요)
+    const allowedOrigin = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
 
     return [
       {
@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
+              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
           },
           // H-2: Cross-Origin-Opener-Policy
           {

@@ -16,7 +16,7 @@ export function ReportList({ reports }: ReportListProps) {
     return (
       <div className="py-6 text-center">
         <p className="text-gray-500 font-mono text-sm">
-          오늘의 보고 내역이 없습니다.
+          이번 주 보고 내역이 없습니다.
         </p>
       </div>
     );

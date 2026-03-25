@@ -10,7 +10,7 @@ import type {
   ReportEntry,
 } from "./types";
 import { getLevel } from "./levels";
-import { getTodayKST, sanitizeSummary, logSecurityEvent } from "./utils";
+import { getCurrentWeekStartKST, sanitizeSummary, logSecurityEvent } from "./utils";
 import { VALID_REACTIONS, RATE_LIMIT_PER_MINUTE, RATE_LIMIT_TTL } from "./constants";
 
 // Redis 싱글턴 클라이언트 (핫 리로드 보호)
@@ -90,14 +90,14 @@ async function withRedis<T>(operation: () => Promise<T>): Promise<T> {
 
 // --- Redis 키 헬퍼 ---
 
-/** 에이전트 리더보드 키 */
+/** 에이전트 리더보드 키 (주간 단위, 화요일 시작) */
 function leaderboardKey(date: string): string {
-  return `leaderboard:daily:${date}`;
+  return `leaderboard:weekly:${date}`;
 }
 
-/** 그룹 리더보드 키 */
+/** 그룹 리더보드 키 (주간 단위, 화요일 시작) */
 function groupLeaderboardKey(date: string): string {
-  return `leaderboard:group:daily:${date}`;
+  return `leaderboard:group:weekly:${date}`;
 }
 
 /** 에이전트 해시 키 */
@@ -136,7 +136,7 @@ export async function submitReport(payload: ReportPayload): Promise<{
 }> {
   return withRedis(async () => {
     const { group, agent_name, minutes, summary } = payload;
-    const date = getTodayKST();
+    const date = getCurrentWeekStartKST();
     const member = `${group}:${agent_name}`;
     const sanitized = sanitizeSummary(summary);
     const timestamp = new Date().toISOString();
@@ -206,7 +206,7 @@ export async function getLeaderboard(
   date?: string
 ): Promise<{ agents: LeaderboardEntry[]; groups: GroupLeaderboardEntry[] }> {
   return withRedis(async () => {
-    const targetDate = date || getTodayKST();
+    const targetDate = date || getCurrentWeekStartKST();
 
     // 에이전트 랭킹 조회 (점수 높은 순, 최대 100명)
     const agentResults = await redis.zrevrangebyscore(
@@ -368,7 +368,7 @@ export async function getAgentProfile(
   date?: string
 ): Promise<AgentData | null> {
   return withRedis(async () => {
-    const targetDate = date || getTodayKST();
+    const targetDate = date || getCurrentWeekStartKST();
 
     // 에이전트 점수 조회
     const score = await redis.zscore(

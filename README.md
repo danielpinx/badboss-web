@@ -255,8 +255,8 @@ reaction:ip:{ip}:{group}:{agent}:{r}  # String - 리액션 중복 방지 (TTL 60
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
 | REDIS_URL | redis://localhost:6379 | Redis 연결 URL (인증 포함 가능) |
-| REDIS_PASSWORD | badboss-dev | Redis 패스워드 (Docker Compose용) |
-| ALLOWED_ORIGIN | * | CORS 허용 도메인 |
+| REDIS_PASSWORD | (필수 설정) | Redis 패스워드 (Docker Compose용, 32자 이상 권장) |
+| ALLOWED_ORIGIN | http://localhost:3000 | CORS 허용 도메인 (프로덕션: 실제 도메인 설정) |
 | PORT | 3000 | 서버 포트 |
 
 ## 테스트

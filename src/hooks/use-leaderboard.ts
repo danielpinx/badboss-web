@@ -21,7 +21,7 @@ const fetcher = async (url: string) => {
 /**
  * 리더보드 데이터를 실시간으로 가져오는 훅.
  * 5초마다 자동 갱신된다.
- * @param date - 조회할 날짜 (선택, 기본값은 오늘)
+ * @param date - 조회할 주간 시작일 (선택, 기본값은 이번 주 화요일)
  */
 export function useLeaderboard(date?: string) {
   const url = date ? `/api/leaderboard?date=${date}` : "/api/leaderboard";

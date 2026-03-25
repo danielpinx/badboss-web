@@ -114,7 +114,7 @@ export default function AgentProfilePage({
           {/* 누적 시간 */}
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-sm text-gray-400">
-              오늘 누적 시간:
+              이번 주 누적 시간:
             </span>
             <span className="font-mono text-3xl font-bold text-neon-green neon-glow-green">
               {formatMinutes(data.total_minutes)}
@@ -141,7 +141,7 @@ export default function AgentProfilePage({
           {/* 보고 내역 타임라인 */}
           <div className="space-y-2">
             <h3 className="font-mono text-sm text-gray-400">
-              오늘의 보고 내역
+              이번 주 보고 내역
             </h3>
             <div className="border border-cyber-border rounded-lg p-4 bg-black/20">
               <ReportList reports={data.reports} />

@@ -24,6 +24,32 @@ export function getTodayKST(): string {
 }
 
 /**
+ * KST 기준 현재 주의 시작일(화요일)을 YYYY-MM-DD 형식으로 반환한다.
+ * 매주 화요일 00:00 KST에 리더보드가 초기화된다.
+ * 화요일~월요일을 한 주기로 본다.
+ * @returns KST 기준 이번 주 화요일 날짜 문자열
+ */
+export function getCurrentWeekStartKST(): string {
+  // KST 기준 현재 날짜 파싱
+  const todayStr = getTodayKST();
+  const [year, month, day] = todayStr.split("-").map(Number);
+  const today = new Date(year, month - 1, day);
+
+  // getDay(): 0=일, 1=월, 2=화, ..., 6=토
+  const dayOfWeek = today.getDay();
+
+  // 화요일(2)로부터의 오프셋 계산
+  // 화=0, 수=1, 목=2, 금=3, 토=4, 일=5, 월=6
+  const daysSinceTuesday = (dayOfWeek - 2 + 7) % 7;
+  const tuesday = new Date(year, month - 1, day - daysSinceTuesday);
+
+  const y = tuesday.getFullYear();
+  const m = String(tuesday.getMonth() + 1).padStart(2, "0");
+  const d = String(tuesday.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * summary 텍스트를 새니타이즈한다.
  * HTML 태그를 반복적으로 제거하고(중첩 태그 처리) 30자로 자른다.
  * @param text - 원본 텍스트

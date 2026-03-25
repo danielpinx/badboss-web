@@ -1,7 +1,8 @@
 // 유틸리티 함수 테스트
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   getTodayKST,
+  getCurrentWeekStartKST,
   sanitizeSummary,
   validateGroupName,
   validateAgentName,
@@ -21,6 +22,78 @@ describe('getTodayKST', () => {
     const result = getTodayKST();
     const date = new Date(result);
     expect(date.getTime()).not.toBeNaN();
+  });
+});
+
+describe('getCurrentWeekStartKST', () => {
+  it('YYYY-MM-DD 형식의 문자열을 반환한다', () => {
+    const result = getCurrentWeekStartKST();
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('반환된 날짜가 화요일이다', () => {
+    const result = getCurrentWeekStartKST();
+    const [year, month, day] = result.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    // getDay(): 0=일, 1=월, 2=화
+    expect(date.getDay()).toBe(2);
+  });
+
+  it('반환된 날짜가 오늘 이전이거나 오늘이다', () => {
+    const weekStart = getCurrentWeekStartKST();
+    const today = getTodayKST();
+    expect(weekStart <= today).toBe(true);
+  });
+
+  it('반환된 날짜가 오늘로부터 최대 6일 전이다', () => {
+    const weekStart = getCurrentWeekStartKST();
+    const today = getTodayKST();
+    const startDate = new Date(weekStart);
+    const todayDate = new Date(today);
+    const diffDays = (todayDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    expect(diffDays).toBeGreaterThanOrEqual(0);
+    expect(diffDays).toBeLessThan(7);
+  });
+
+  it.each([
+    { date: '2026-03-24', day: '화요일', expected: '2026-03-24' },
+    { date: '2026-03-25', day: '수요일', expected: '2026-03-24' },
+    { date: '2026-03-26', day: '목요일', expected: '2026-03-24' },
+    { date: '2026-03-27', day: '금요일', expected: '2026-03-24' },
+    { date: '2026-03-28', day: '토요일', expected: '2026-03-24' },
+    { date: '2026-03-29', day: '일요일', expected: '2026-03-24' },
+    { date: '2026-03-30', day: '월요일', expected: '2026-03-24' },
+  ])('$day($date)이면 $expected를 반환한다', ({ date, expected }) => {
+    vi.useFakeTimers();
+    // KST(+09:00) 정오 기준으로 설정
+    vi.setSystemTime(new Date(`${date}T12:00:00+09:00`));
+
+    const result = getCurrentWeekStartKST();
+    expect(result).toBe(expected);
+
+    vi.useRealTimers();
+  });
+
+  it('월 경계를 넘는 경우에도 정확히 계산한다', () => {
+    vi.useFakeTimers();
+    // 2026-04-01(수) -> 2026-03-31(화)
+    vi.setSystemTime(new Date('2026-04-01T12:00:00+09:00'));
+
+    const result = getCurrentWeekStartKST();
+    expect(result).toBe('2026-03-31');
+
+    vi.useRealTimers();
+  });
+
+  it('연도 경계를 넘는 경우에도 정확히 계산한다', () => {
+    vi.useFakeTimers();
+    // 2027-01-01(금) -> 2026-12-29(화)
+    vi.setSystemTime(new Date('2027-01-01T12:00:00+09:00'));
+
+    const result = getCurrentWeekStartKST();
+    expect(result).toBe('2026-12-29');
+
+    vi.useRealTimers();
   });
 });
 

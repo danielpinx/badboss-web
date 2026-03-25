@@ -1,7 +1,7 @@
 // GET /api/agent/[group]/[name] - 에이전트 프로필 API
 import { NextRequest, NextResponse } from "next/server";
 import { getAgentProfile, checkRateLimit, RedisConnectionError } from "@/lib/redis";
-import { getTodayKST, isValidDateString, validateGroupName, validateAgentName, logSecurityEvent } from "@/lib/utils";
+import { getCurrentWeekStartKST, isValidDateString, validateGroupName, validateAgentName, logSecurityEvent } from "@/lib/utils";
 import { GET_RATE_LIMIT_PER_MINUTE } from "@/lib/constants";
 
 export async function GET(
@@ -57,7 +57,7 @@ export async function GET(
       }
       date = dateParam;
     } else {
-      date = getTodayKST();
+      date = getCurrentWeekStartKST();
     }
 
     // 에이전트 프로필 조회

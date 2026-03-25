@@ -1,7 +1,7 @@
 // GET /api/leaderboard - 랭킹 조회 API
 import { NextRequest, NextResponse } from "next/server";
 import { getLeaderboard, checkRateLimit, RedisConnectionError } from "@/lib/redis";
-import { getTodayKST, isValidDateString } from "@/lib/utils";
+import { getCurrentWeekStartKST, isValidDateString } from "@/lib/utils";
 import { GET_RATE_LIMIT_PER_MINUTE } from "@/lib/constants";
 
 export async function GET(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 날짜 쿼리 파라미터 파싱 (기본값: 오늘 KST)
+    // 날짜 쿼리 파라미터 파싱 (기본값: 이번 주 화요일 KST)
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date");
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       }
       date = dateParam;
     } else {
-      date = getTodayKST();
+      date = getCurrentWeekStartKST();
     }
 
     // 리더보드 데이터 조회

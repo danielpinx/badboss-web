@@ -102,7 +102,7 @@ jobs:
           errors=0
           # Check for common secret patterns in source code
           for f in $(find src -name "*.ts" -o -name "*.tsx"); do
-            if grep -iE '(password|secret|api_key|token)\s*=\s*"[^"]{8,}"' "$f" | grep -v 'badboss-dev' | grep -v 'test' | grep -v '//' > /dev/null 2>&1; then
+            if grep -iE '(password|secret|api_key|token)\s*=\s*"[^"]{8,}"' "$f" | grep -v 'test' | grep -v '//' > /dev/null 2>&1; then
               echo "::error::${f}: Potential hardcoded secret detected"
               errors=$((errors + 1))
             fi
