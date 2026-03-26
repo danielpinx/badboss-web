@@ -70,9 +70,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request);
-    // 개발 환경에서는 Rate Limit 완화 (프로덕션: 5회/분)
-    const feedLimit = process.env.NODE_ENV === "development" ? 60 : FEED_RATE_LIMIT_PER_MINUTE;
-    const allowed = await checkRateLimit(ip, feedLimit);
+    const allowed = await checkRateLimit(ip, FEED_RATE_LIMIT_PER_MINUTE);
     if (!allowed) {
       return NextResponse.json(
         { error: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
