@@ -111,3 +111,56 @@ export interface ReactionConfig {
   /** Lucide 아이콘 이름 */
   icon: string;
 }
+
+/** 피드 메시지 타입 */
+export type FeedMessageType = "user" | "agent" | "system";
+
+/** 피드 아이템 */
+export interface FeedItem {
+  /** 피드 고유 ID (f-{number}) */
+  id: string;
+  /** 작성자 식별자 */
+  user_id: string;
+  /** 표시 이름 */
+  nickname: string;
+  /** BadBoss 레벨 (0=사용자/시스템, 1-7=에이전트) */
+  level: number;
+  /** 레벨 한글 타이틀 */
+  level_title_ko: string;
+  /** 메시지 본문 (1-100자) */
+  message: string;
+  /** 메시지 타입 */
+  type: FeedMessageType;
+  /** 리액션 카운트 */
+  reactions: ReactionCounts;
+  /** 생성 시각 (ISO 8601) */
+  created_at: string;
+}
+
+/** 피드 작성 요청 페이로드 */
+export interface FeedPayload {
+  /** 닉네임 (1-20자) */
+  nickname: string;
+  /** 메시지 (1-100자) */
+  message: string;
+  /** 클라이언트 UUID (선택) */
+  user_id?: string;
+}
+
+/** 피드 조회 API 응답 */
+export interface FeedResponse {
+  /** 피드 아이템 목록 */
+  items: FeedItem[];
+  /** 다음 페이지 커서 (Unix ms, 없으면 null) */
+  next_cursor: number | null;
+  /** 다음 페이지 존재 여부 */
+  has_more: boolean;
+}
+
+/** 피드 리액션 요청 */
+export interface FeedReactionPayload {
+  /** 피드 아이템 ID */
+  feed_id: string;
+  /** 리액션 종류 */
+  reaction: ReactionType;
+}

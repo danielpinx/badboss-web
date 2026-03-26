@@ -6,6 +6,7 @@ import { TypingTitle } from "@/components/typing-title";
 import { FunMessageBar } from "@/components/fun-message-bar";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { GroupLeaderboard } from "@/components/group-leaderboard";
+import { ActivityFeed } from "@/components/activity-feed";
 import { CurlGuide } from "@/components/curl-guide";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -45,6 +46,12 @@ export default function HomePage() {
           >
             그룹 랭킹
           </TabsTrigger>
+          <TabsTrigger
+            value="feed"
+            className="font-mono data-[state=active]:bg-neon-red/10 data-[state=active]:text-neon-red"
+          >
+            노동착취 로그
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents" className="mt-4">
@@ -57,6 +64,10 @@ export default function HomePage() {
           <div className="border border-cyber-border rounded-lg bg-cyber-surface/30 overflow-hidden">
             <GroupLeaderboard />
           </div>
+        </TabsContent>
+
+        <TabsContent value="feed" className="mt-4">
+          <ActivityFeed />
         </TabsContent>
       </Tabs>
 

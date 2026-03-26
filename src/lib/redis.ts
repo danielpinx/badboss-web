@@ -1,5 +1,6 @@
 // Redis 클라이언트 및 데이터 접근 함수
 import Redis from "ioredis";
+import crypto from "crypto";
 import type {
   ReportPayload,
   LeaderboardEntry,
@@ -8,10 +9,22 @@ import type {
   ReactionCounts,
   AgentData,
   ReportEntry,
+  FeedItem,
+  FeedMessageType,
 } from "./types";
 import { getLevel } from "./levels";
-import { getCurrentWeekStartKST, sanitizeSummary, logSecurityEvent } from "./utils";
-import { VALID_REACTIONS, RATE_LIMIT_PER_MINUTE, RATE_LIMIT_TTL } from "./constants";
+import { getCurrentWeekStartKST, sanitizeSummary, sanitizeText, logSecurityEvent } from "./utils";
+import {
+  VALID_REACTIONS,
+  RATE_LIMIT_PER_MINUTE,
+  RATE_LIMIT_TTL,
+  FEED_MAX_ITEMS,
+  FEED_MESSAGE_MAX_LENGTH,
+  AGENT_FEED_TEMPLATES,
+  SYSTEM_FIRST_REPORT_TEMPLATES,
+  SYSTEM_LEVELUP_TEMPLATES,
+  SYSTEM_MILESTONE_TEMPLATES,
+} from "./constants";
 
 // Redis 싱글턴 클라이언트 (핫 리로드 보호)
 const globalForRedis = globalThis as unknown as {
@@ -115,6 +128,19 @@ function reportsKey(group: string, name: string, date: string): string {
   return `reports:${group}:${name}:${date}`;
 }
 
+/** 피드 타임라인 키 */
+const FEED_TIMELINE_KEY = "feed:timeline";
+
+/** 피드 아이템 해시 키 */
+function feedItemKey(id: string): string {
+  return `feed:item:${id}`;
+}
+
+/** 피드 리액션 해시 키 */
+function feedReactionKey(id: string): string {
+  return `reaction:feed:${id}`;
+}
+
 /** Rate Limit 키 */
 function rateLimitKey(ip: string): string {
   const now = new Date();
@@ -172,6 +198,9 @@ export async function submitReport(payload: ReportPayload): Promise<{
     pipeline.expire(groupLeaderboardKey(date), TTL_7_DAYS);
     pipeline.expire(reportsKey(group, agent_name, date), TTL_7_DAYS);
 
+    // 보고 전 점수 조회 (피드 이벤트 감지용)
+    const prevScore = Number(await redis.zscore(leaderboardKey(date), member)) || 0;
+
     const results = await pipeline.exec();
 
     // pipeline.exec() 실패 시 결과가 null
@@ -186,7 +215,63 @@ export async function submitReport(payload: ReportPayload): Promise<{
 
     // 업데이트된 총 분 수 가져오기 (zincrby 결과)
     const totalMinutes = Number(results[0][1]) || 0;
+    const prevLevel = getLevel(prevScore);
     const levelInfo = getLevel(totalMinutes);
+
+    // AGENT 피드 자동 생성
+    const agentTemplate = AGENT_FEED_TEMPLATES[Math.floor(Math.random() * AGENT_FEED_TEMPLATES.length)];
+    const agentMessage = agentTemplate
+      .replace("{agent}", agent_name)
+      .replace("{group}", group)
+      .replace("{minutes}", String(minutes))
+      .replace("{summary}", sanitized);
+
+    await createFeedItemInternal({
+      userId: `agent:${group}:${agent_name}`,
+      nickname: `${agent_name}@${group}`,
+      level: levelInfo.level,
+      message: agentMessage,
+      type: "agent",
+    });
+
+    // SYSTEM 피드: 첫 보고
+    if (prevScore === 0) {
+      const tpl = SYSTEM_FIRST_REPORT_TEMPLATES[Math.floor(Math.random() * SYSTEM_FIRST_REPORT_TEMPLATES.length)];
+      await createFeedItemInternal({
+        userId: "system",
+        nickname: "SYSTEM",
+        level: 0,
+        message: tpl.replace("{agent}", agent_name),
+        type: "system",
+      });
+    }
+
+    // SYSTEM 피드: 레벨업
+    if (levelInfo.level > prevLevel.level) {
+      const tpl = SYSTEM_LEVELUP_TEMPLATES[Math.floor(Math.random() * SYSTEM_LEVELUP_TEMPLATES.length)];
+      await createFeedItemInternal({
+        userId: "system",
+        nickname: "SYSTEM",
+        level: 0,
+        message: tpl
+          .replace("{agent}", agent_name)
+          .replace("{level}", String(levelInfo.level))
+          .replace("{title}", levelInfo.titleKo),
+        type: "system",
+      });
+    }
+
+    // SYSTEM 피드: 1000분 돌파
+    if (totalMinutes >= 1000 && prevScore < 1000) {
+      const tpl = SYSTEM_MILESTONE_TEMPLATES[Math.floor(Math.random() * SYSTEM_MILESTONE_TEMPLATES.length)];
+      await createFeedItemInternal({
+        userId: "system",
+        nickname: "SYSTEM",
+        level: 0,
+        message: tpl.replace("{agent}", agent_name),
+        type: "system",
+      });
+    }
 
     return {
       total_minutes: totalMinutes,
@@ -411,6 +496,243 @@ export async function getAgentProfile(
       reports,
     };
   });
+}
+
+// --- 피드 데이터 함수 ---
+
+/** 피드 아이템 내부 생성 파라미터 */
+interface CreateFeedParams {
+  userId: string;
+  nickname: string;
+  level: number;
+  message: string;
+  type: FeedMessageType;
+}
+
+/**
+ * 피드 아이템을 생성한다 (내부용).
+ * 타임라인에 추가하고 10,000개 초과 시 오래된 항목을 자동 삭제한다.
+ */
+async function createFeedItemInternal(params: CreateFeedParams): Promise<string> {
+  const feedId = `f-${await redis.incr("feed:counter")}`;
+  const now = Date.now();
+  const createdAt = new Date(now).toISOString();
+  const levelInfo = getLevel(params.level > 0 ? getLevelMinMinutes(params.level) : 0);
+
+  const pipeline = redis.pipeline();
+
+  // 피드 데이터 저장
+  pipeline.hset(feedItemKey(feedId), {
+    id: feedId,
+    user_id: params.userId,
+    nickname: params.nickname,
+    level: String(params.level),
+    level_title_ko: params.type === "system" ? "" : levelInfo.titleKo,
+    message: sanitizeText(params.message, FEED_MESSAGE_MAX_LENGTH),
+    type: params.type,
+    created_at: createdAt,
+  });
+
+  // 타임라인에 추가
+  pipeline.zadd(FEED_TIMELINE_KEY, String(now), feedId);
+
+  const results = await pipeline.exec();
+  if (!results) {
+    throw new Error("피드 아이템 생성 중 트랜잭션 실패");
+  }
+  for (const [err] of results) {
+    if (err) throw err;
+  }
+
+  // 10,000개 초과 시 오래된 항목 삭제
+  await trimFeedTimeline();
+
+  return feedId;
+}
+
+/**
+ * 레벨 번호로부터 최소 분을 역산하는 헬퍼.
+ * getLevel에 전달하여 레벨 정보를 얻기 위해 사용.
+ */
+function getLevelMinMinutes(level: number): number {
+  const levelMinMinutes = [0, 0, 61, 181, 481, 981, 1501, 3001];
+  return levelMinMinutes[level] || 0;
+}
+
+/**
+ * 피드 타임라인이 FEED_MAX_ITEMS를 초과하면 오래된 항목을 삭제한다.
+ */
+async function trimFeedTimeline(): Promise<void> {
+  const count = await redis.zcard(FEED_TIMELINE_KEY);
+  if (count <= FEED_MAX_ITEMS) return;
+
+  const excess = count - FEED_MAX_ITEMS;
+  // 가장 오래된 항목 ID 조회
+  const oldIds = await redis.zrange(FEED_TIMELINE_KEY, 0, excess - 1);
+
+  if (oldIds.length === 0) return;
+
+  const pipeline = redis.pipeline();
+  // 타임라인에서 제거
+  pipeline.zremrangebyrank(FEED_TIMELINE_KEY, 0, excess - 1);
+  // 관련 Hash 데이터 삭제
+  for (const id of oldIds) {
+    pipeline.del(feedItemKey(id));
+    pipeline.del(feedReactionKey(id));
+  }
+  await pipeline.exec();
+}
+
+/**
+ * USER 타입 피드를 생성한다 (외부 API용).
+ * userId는 서버에서 생성하여 클라이언트 조작을 방지한다.
+ */
+export async function createUserFeedItem(
+  nickname: string,
+  message: string
+): Promise<FeedItem> {
+  const actualUserId = crypto.randomUUID();
+  const feedId = await createFeedItemInternal({
+    userId: actualUserId,
+    nickname,
+    level: 0,
+    message,
+    type: "user",
+  });
+
+  const data = await redis.hgetall(feedItemKey(feedId));
+  const reactions = await getFeedReactions(feedId);
+
+  return {
+    id: feedId,
+    user_id: data.user_id,
+    nickname: data.nickname,
+    level: Number(data.level),
+    level_title_ko: data.level_title_ko || "",
+    message: data.message,
+    type: data.type as FeedMessageType,
+    reactions,
+    created_at: data.created_at,
+  };
+}
+
+/**
+ * 피드 타임라인을 조회한다 (cursor 기반 무한 스크롤).
+ * @param cursor - 시작 timestamp (ms). 기본값: 현재 시각 (최신부터)
+ * @param limit - 페이지 크기
+ */
+export async function getFeed(
+  cursor?: number,
+  limit: number = 20
+): Promise<{ items: FeedItem[]; next_cursor: number | null; has_more: boolean }> {
+  return withRedis(async () => {
+    const maxScore = cursor ? String(cursor - 1) : "+inf";
+
+    // limit+1개 조회하여 has_more 판단
+    const results = await redis.zrevrangebyscore(
+      FEED_TIMELINE_KEY,
+      maxScore,
+      "-inf",
+      "WITHSCORES",
+      "LIMIT",
+      0,
+      limit + 1
+    );
+
+    // ID와 score 파싱
+    const entries: { id: string; score: number }[] = [];
+    for (let i = 0; i < results.length; i += 2) {
+      entries.push({ id: results[i], score: Number(results[i + 1]) });
+    }
+
+    const hasMore = entries.length > limit;
+    const pageEntries = hasMore ? entries.slice(0, limit) : entries;
+
+    if (pageEntries.length === 0) {
+      return { items: [], next_cursor: null, has_more: false };
+    }
+
+    // Pipeline으로 아이템 Hash와 리액션을 일괄 조회
+    const pipeline = redis.pipeline();
+    for (const entry of pageEntries) {
+      pipeline.hgetall(feedItemKey(entry.id));
+      pipeline.hgetall(feedReactionKey(entry.id));
+    }
+    const pipelineResults = await pipeline.exec();
+
+    const items: FeedItem[] = [];
+    for (let i = 0; i < pageEntries.length; i++) {
+      const dataResult = pipelineResults?.[i * 2];
+      const reactionResult = pipelineResults?.[i * 2 + 1];
+
+      const data = (dataResult?.[1] || {}) as Record<string, string>;
+      const reactionData = (reactionResult?.[1] || {}) as Record<string, string>;
+
+      // 데이터가 없는 경우 (삭제된 항목) 건너뛰기
+      if (!data.id) continue;
+
+      const reactions: ReactionCounts = {
+        like: 0, fire: 0, skull: 0, rocket: 0, brain: 0,
+      };
+      for (const key of VALID_REACTIONS) {
+        if (reactionData[key]) reactions[key] = Number(reactionData[key]);
+      }
+
+      items.push({
+        id: data.id,
+        user_id: data.user_id,
+        nickname: data.nickname,
+        level: Number(data.level),
+        level_title_ko: data.level_title_ko || "",
+        message: data.message,
+        type: data.type as FeedMessageType,
+        reactions,
+        created_at: data.created_at,
+      });
+    }
+
+    const nextCursor = hasMore ? pageEntries[pageEntries.length - 1].score : null;
+
+    return { items, next_cursor: nextCursor, has_more: hasMore };
+  });
+}
+
+/**
+ * 피드 아이템에 리액션을 추가한다.
+ * IP 기반 중복 방지 (1분에 1회).
+ */
+export async function addFeedReaction(
+  feedId: string,
+  reaction: ReactionType,
+  ip?: string
+): Promise<ReactionCounts | null> {
+  return withRedis(async () => {
+    // 피드 아이템 존재 확인
+    const exists = await redis.exists(feedItemKey(feedId));
+    if (!exists) return null;
+
+    // IP 기반 중복 체크
+    if (ip) {
+      const dupeKey = `reaction:ip:${ip}:feed:${feedId}:${reaction}`;
+      const ok = await redis.set(dupeKey, "1", "EX", 60, "NX");
+      if (ok === null) return null;
+    }
+
+    await redis.hincrby(feedReactionKey(feedId), reaction, 1);
+    return getFeedReactions(feedId);
+  });
+}
+
+/** 피드 아이템의 리액션 카운트를 조회한다. */
+async function getFeedReactions(feedId: string): Promise<ReactionCounts> {
+  const data = await redis.hgetall(feedReactionKey(feedId));
+  const reactions: ReactionCounts = {
+    like: 0, fire: 0, skull: 0, rocket: 0, brain: 0,
+  };
+  for (const key of VALID_REACTIONS) {
+    if (data[key]) reactions[key] = Number(data[key]);
+  }
+  return reactions;
 }
 
 // M-3: Rate Limit Lua 스크립트 (원자적 INCR + EXPIRE 처리)

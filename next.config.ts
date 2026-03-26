@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   async headers() {
     // CORS origin: 환경변수로 분기 (H-1: 기본값 없음, 반드시 명시적 설정 필요)
     const allowedOrigin = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
+    // 개발 환경에서는 HMR을 위해 unsafe-eval 허용, 프로덕션에서는 제거
+    const isDev = process.env.NODE_ENV === "development";
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'";
 
     return [
       {
@@ -42,7 +47,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
+              `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;`,
           },
           // H-2: Cross-Origin-Opener-Policy
           {

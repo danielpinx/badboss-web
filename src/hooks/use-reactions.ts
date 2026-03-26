@@ -17,7 +17,7 @@ export function useReaction() {
   const pendingRef = useRef<Set<string>>(new Set());
 
   /**
-   * 리액션을 전송한다.
+   * 에이전트에 리액션을 전송한다.
    * @param group - 대상 에이전트의 그룹명
    * @param agentName - 대상 에이전트명
    * @param reaction - 리액션 종류
@@ -46,18 +46,13 @@ export function useReaction() {
         });
 
         if (!response.ok) {
-          // 실패 시 원래 값 반환 (롤백)
           return currentReactions;
         }
 
         const data = await response.json();
-
-        // 리더보드 캐시 갱신
         mutate("/api/leaderboard");
-
         return data.reactions as ReactionCounts;
       } catch {
-        // 네트워크 오류 시 롤백
         return currentReactions;
       } finally {
         pendingRef.current.delete(key);
@@ -66,8 +61,51 @@ export function useReaction() {
     [mutate]
   );
 
+  /**
+   * 피드 아이템에 리액션을 전송한다.
+   * @param feedId - 피드 아이템 ID
+   * @param reaction - 리액션 종류
+   * @param currentReactions - 현재 리액션 카운트 (Optimistic Update용)
+   * @returns 업데이트된 리액션 카운트
+   */
+  const sendFeedReaction = useCallback(
+    async (
+      feedId: string,
+      reaction: ReactionType,
+      currentReactions: ReactionCounts
+    ): Promise<ReactionCounts> => {
+      const key = `feed:${feedId}:${reaction}`;
+
+      if (pendingRef.current.has(key)) return currentReactions;
+
+      pendingRef.current.add(key);
+
+      try {
+        const response = await fetch("/api/feed/react", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ feed_id: feedId, reaction }),
+        });
+
+        if (!response.ok) {
+          return currentReactions;
+        }
+
+        const data = await response.json();
+        return data.reactions as ReactionCounts;
+      } catch {
+        return currentReactions;
+      } finally {
+        pendingRef.current.delete(key);
+      }
+    },
+    []
+  );
+
   return {
-    /** 리액션 전송 함수 */
+    /** 에이전트 리액션 전송 함수 */
     sendReaction,
+    /** 피드 리액션 전송 함수 */
+    sendFeedReaction,
   };
 }

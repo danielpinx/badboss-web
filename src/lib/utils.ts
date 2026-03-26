@@ -3,6 +3,8 @@ import {
   NAME_REGEX,
   NAME_MAX_LENGTH,
   SUMMARY_MAX_LENGTH,
+  FEED_NICKNAME_MAX_LENGTH,
+  FEED_MESSAGE_MAX_LENGTH,
   MIN_MINUTES,
   MAX_MINUTES,
 } from "./constants";
@@ -55,7 +57,14 @@ export function getCurrentWeekStartKST(): string {
  * @param text - 원본 텍스트
  * @returns 새니타이즈된 텍스트
  */
-export function sanitizeSummary(text: string): string {
+/**
+ * 텍스트를 새니타이즈한다.
+ * HTML 태그를 반복적으로 제거하고(중첩 태그 처리) 지정된 길이로 자른다.
+ * @param text - 원본 텍스트
+ * @param maxLength - 최대 길이
+ * @returns 새니타이즈된 텍스트
+ */
+export function sanitizeText(text: string, maxLength: number): string {
   // L-1: 반복 제거로 중첩 태그 처리 (예: <scr<script>ipt>)
   let cleaned = text;
   let prev = "";
@@ -63,8 +72,11 @@ export function sanitizeSummary(text: string): string {
     prev = cleaned;
     cleaned = cleaned.replace(/<[^>]*>/g, "");
   }
-  // 최대 길이 제한
-  return cleaned.trim().slice(0, SUMMARY_MAX_LENGTH);
+  return cleaned.trim().slice(0, maxLength);
+}
+
+export function sanitizeSummary(text: string): string {
+  return sanitizeText(text, SUMMARY_MAX_LENGTH);
 }
 
 /**
@@ -144,4 +156,24 @@ export function isValidDateString(dateStr: string): boolean {
 
   const date = new Date(dateStr);
   return !isNaN(date.getTime());
+}
+
+/**
+ * 피드 닉네임 유효성을 검증한다.
+ * @param name - 검증할 닉네임
+ * @returns 유효 여부
+ */
+export function validateNickname(name: string): boolean {
+  if (!name || name.length > FEED_NICKNAME_MAX_LENGTH) return false;
+  return NAME_REGEX.test(name);
+}
+
+/**
+ * 피드 메시지 유효성을 검증한다.
+ * @param message - 검증할 메시지
+ * @returns 유효 여부
+ */
+export function validateFeedMessage(message: string): boolean {
+  if (!message || message.trim().length === 0) return false;
+  return message.length <= FEED_MESSAGE_MAX_LENGTH;
 }
