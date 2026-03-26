@@ -148,6 +148,54 @@ function rateLimitKey(ip: string): string {
   return `ratelimit:${ip}:${minute}`;
 }
 
+/** API 통계 키 (엔드포인트별 일간 호출 수) */
+function apiStatsKey(endpoint: string, date: string): string {
+  return `stats:api:${endpoint}:${date}`;
+}
+
+/** API 통계 TTL: 30일 */
+const API_STATS_TTL = 60 * 60 * 24 * 30;
+
+/**
+ * API 호출을 비동기로 기록한다.
+ * 실패해도 응답에 영향을 주지 않는다 (fire-and-forget).
+ * @param endpoint - 엔드포인트 식별자 (예: "report", "leaderboard")
+ */
+export function trackApiCall(endpoint: string): void {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10);
+  const key = apiStatsKey(endpoint, date);
+  redis.incr(key).then((count) => {
+    if (count === 1) redis.expire(key, API_STATS_TTL);
+  }).catch(() => {
+    // 통계 기록 실패는 무시 (서비스 영향 없음)
+  });
+}
+
+/**
+ * API 통계를 조회한다.
+ * @param endpoint - 엔드포인트 (null이면 전체)
+ * @param date - 날짜 (YYYY-MM-DD)
+ */
+export async function getApiStats(
+  endpoint: string | null,
+  date: string
+): Promise<Record<string, number>> {
+  const endpoints = ["report", "leaderboard", "react", "feed", "feed-post", "feed-react", "agent"];
+  const targets = endpoint ? [endpoint] : endpoints;
+  const pipeline = redis.pipeline();
+  for (const ep of targets) {
+    pipeline.get(apiStatsKey(ep, date));
+  }
+  const results = await pipeline.exec();
+  const stats: Record<string, number> = {};
+  targets.forEach((ep, i) => {
+    const val = results?.[i]?.[1];
+    stats[ep] = val ? Number(val) : 0;
+  });
+  return stats;
+}
+
 // --- 데이터 함수 ---
 
 /**

@@ -1,6 +1,6 @@
 // GET /api/leaderboard - 랭킹 조회 API
 import { NextRequest, NextResponse } from "next/server";
-import { getLeaderboard, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { getLeaderboard, checkRateLimit, trackApiCall, RedisConnectionError } from "@/lib/redis";
 import { getCurrentWeekStartKST, isValidDateString } from "@/lib/utils";
 import { GET_RATE_LIMIT_PER_MINUTE } from "@/lib/constants";
 
@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
     // 리더보드 데이터 조회
     const { agents, groups } = await getLeaderboard(date);
 
+    trackApiCall("leaderboard");
     return NextResponse.json({
       date,
       agents,

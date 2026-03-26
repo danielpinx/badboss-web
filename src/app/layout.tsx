@@ -1,7 +1,10 @@
 // 루트 레이아웃: 다크모드 고정 + 사이버펑크 테마
 import type { Metadata } from "next";
+import Script from "next/script";
 import { JetBrains_Mono, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
+
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 /** JetBrains Mono - 코딩 감성 메인 폰트 */
 const jetbrainsMono = JetBrains_Mono({
@@ -41,6 +44,24 @@ export default function RootLayout({
       className={`dark ${jetbrainsMono.variable} ${notoSansKR.variable}`}
     >
       <body className="min-h-screen bg-cyber-bg cyber-grid-bg antialiased">
+        {/* GA4 트래킹 (NEXT_PUBLIC_GA_ID 설정 시에만 로드) */}
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="gtag-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
+
         {/* 메인 콘텐츠 */}
         <main className="relative z-10">{children}</main>
 

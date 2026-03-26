@@ -1,6 +1,6 @@
 // POST /api/react - 리액션 API
 import { NextRequest, NextResponse } from "next/server";
-import { addReaction, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { addReaction, checkRateLimit, trackApiCall, RedisConnectionError } from "@/lib/redis";
 import { validateGroupName, validateAgentName, logSecurityEvent } from "@/lib/utils";
 import { VALID_REACTIONS } from "@/lib/constants";
 import type { ReactionType } from "@/lib/types";
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    trackApiCall("react");
     return NextResponse.json({
       success: true,
       reactions,

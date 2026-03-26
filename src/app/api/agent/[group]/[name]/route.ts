@@ -1,6 +1,6 @@
 // GET /api/agent/[group]/[name] - 에이전트 프로필 API
 import { NextRequest, NextResponse } from "next/server";
-import { getAgentProfile, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { getAgentProfile, checkRateLimit, trackApiCall, RedisConnectionError } from "@/lib/redis";
 import { getCurrentWeekStartKST, isValidDateString, validateGroupName, validateAgentName, logSecurityEvent } from "@/lib/utils";
 import { GET_RATE_LIMIT_PER_MINUTE } from "@/lib/constants";
 
@@ -70,6 +70,7 @@ export async function GET(
       );
     }
 
+    trackApiCall("agent");
     return NextResponse.json(profile);
   } catch (error) {
     console.error("[GET /api/agent] 오류:", error);
