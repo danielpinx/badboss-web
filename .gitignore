@@ -50,3 +50,11 @@ next-env.d.ts
 
 # backups
 /backups/
+
+# playwright-cli (런타임 생성 파일)
+.playwright-cli/
+
+# editor swap/temp files
+*.swp
+*.swo
+*~
