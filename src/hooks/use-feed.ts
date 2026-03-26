@@ -38,9 +38,16 @@ export function useFeed() {
     }
   );
 
-  // 첫 페이지 아이템 + 추가 로드된 페이지 아이템 합산
+  // 첫 페이지 아이템 + 추가 로드된 페이지 아이템 합산 (ID 기반 중복 제거)
   const firstPageItems = data?.items || [];
-  const allItems = [...firstPageItems, ...pages.flat()];
+  const seenIds = new Set<string>();
+  const allItems: FeedItem[] = [];
+  for (const item of [...firstPageItems, ...pages.flat()]) {
+    if (!seenIds.has(item.id)) {
+      seenIds.add(item.id);
+      allItems.push(item);
+    }
+  }
 
   /** 다음 페이지를 로드한다. */
   const loadMore = useCallback(async () => {

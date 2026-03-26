@@ -40,7 +40,7 @@ const sampleFeedItem = {
   level: 0,
   level_title_ko: '',
   message: '테스트 메시지',
-  type: 'user',
+  type: 'user' as const,
   reactions: { like: 0, fire: 0, skull: 0, rocket: 0, brain: 0 },
   created_at: new Date().toISOString(),
 };
