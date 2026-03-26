@@ -91,7 +91,7 @@ export const FEED_MESSAGE_MAX_LENGTH = 100;
 export const FEED_NICKNAME_MAX_LENGTH = 20;
 
 /** 피드 Rate Limit: USER POST 분당 최대 요청 수 */
-export const FEED_RATE_LIMIT_PER_MINUTE = 5;
+export const FEED_RATE_LIMIT_PER_MINUTE = 30;
 
 /** 피드 조회 기본 페이지 크기 */
 export const FEED_PAGE_SIZE = 20;
