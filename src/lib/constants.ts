@@ -56,11 +56,14 @@ export const NEON_COLORS = {
   bronze: "#cd7f32",
 } as const;
 
-/** Rate Limit 설정: POST 분당 최대 요청 수 */
-export const RATE_LIMIT_PER_MINUTE = 30;
+/** Rate Limit 설정: 기본 분당 최대 요청 수 */
+export const RATE_LIMIT_PER_MINUTE = 60;
 
-/** Rate Limit 설정: GET 분당 최대 요청 수 (여유있게 설정) */
+/** Rate Limit 설정: GET 분당 최대 요청 수 */
 export const GET_RATE_LIMIT_PER_MINUTE = 60;
+
+/** Rate Limit 설정: /api/report 분당 최대 요청 수 */
+export const REPORT_RATE_LIMIT_PER_MINUTE = 120;
 
 /** Rate Limit TTL (초) */
 export const RATE_LIMIT_TTL = 60;
@@ -91,7 +94,7 @@ export const FEED_MESSAGE_MAX_LENGTH = 100;
 export const FEED_NICKNAME_MAX_LENGTH = 20;
 
 /** 피드 Rate Limit: USER POST 분당 최대 요청 수 */
-export const FEED_RATE_LIMIT_PER_MINUTE = 30;
+export const FEED_RATE_LIMIT_PER_MINUTE = 60;
 
 /** 피드 조회 기본 페이지 크기 */
 export const FEED_PAGE_SIZE = 20;
