@@ -39,7 +39,10 @@ export async function GET(request: NextRequest) {
     const limitParam = searchParams.get("limit");
 
     const cursor = cursorParam ? Number(cursorParam) : undefined;
-    const limit = limitParam ? Math.min(Number(limitParam), FEED_PAGE_SIZE) : FEED_PAGE_SIZE;
+    const parsedLimit = limitParam ? Number(limitParam) : FEED_PAGE_SIZE;
+    const limit = (!Number.isFinite(parsedLimit) || parsedLimit < 1)
+      ? FEED_PAGE_SIZE
+      : Math.min(Math.floor(parsedLimit), FEED_PAGE_SIZE);
 
     if (cursor !== undefined && (isNaN(cursor) || cursor < 0)) {
       return NextResponse.json(

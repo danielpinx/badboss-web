@@ -13,7 +13,7 @@ import type {
   FeedMessageType,
 } from "./types";
 import { getLevel } from "./levels";
-import { getCurrentWeekStartKST, sanitizeSummary, sanitizeText, logSecurityEvent } from "./utils";
+import { getCurrentWeekStartKST, sanitizeText, logSecurityEvent } from "./utils";
 import {
   VALID_REACTIONS,
   RATE_LIMIT_PER_MINUTE,
@@ -164,12 +164,11 @@ export async function submitReport(payload: ReportPayload): Promise<{
     const { group, agent_name, minutes, summary } = payload;
     const date = getCurrentWeekStartKST();
     const member = `${group}:${agent_name}`;
-    const sanitized = sanitizeSummary(summary);
     const timestamp = new Date().toISOString();
 
     const reportEntry: ReportEntry = {
       minutes,
-      summary: sanitized,
+      summary,
       timestamp,
     };
 
@@ -186,8 +185,9 @@ export async function submitReport(payload: ReportPayload): Promise<{
     pipeline.hset(agentKey(group, agent_name), {
       group,
       name: agent_name,
-      created_at: timestamp,
     });
+    // created_at은 최초 생성 시에만 설정 (이후 보고에서 덮어쓰지 않음)
+    pipeline.hsetnx(agentKey(group, agent_name), "created_at", timestamp);
 
     // 보고 내역 추가
     pipeline.rpush(reportsKey(group, agent_name, date), JSON.stringify(reportEntry));
@@ -197,9 +197,6 @@ export async function submitReport(payload: ReportPayload): Promise<{
     pipeline.expire(leaderboardKey(date), TTL_7_DAYS);
     pipeline.expire(groupLeaderboardKey(date), TTL_7_DAYS);
     pipeline.expire(reportsKey(group, agent_name, date), TTL_7_DAYS);
-
-    // 보고 전 점수 조회 (피드 이벤트 감지용)
-    const prevScore = Number(await redis.zscore(leaderboardKey(date), member)) || 0;
 
     const results = await pipeline.exec();
 
@@ -215,6 +212,8 @@ export async function submitReport(payload: ReportPayload): Promise<{
 
     // 업데이트된 총 분 수 가져오기 (zincrby 결과)
     const totalMinutes = Number(results[0][1]) || 0;
+    // 트랜잭션 내 zincrby 결과에서 이전 점수를 역산하여 레이스 컨디션 방지
+    const prevScore = totalMinutes - minutes;
     const prevLevel = getLevel(prevScore);
     const levelInfo = getLevel(totalMinutes);
 
@@ -224,7 +223,7 @@ export async function submitReport(payload: ReportPayload): Promise<{
       .replace("{agent}", agent_name)
       .replace("{group}", group)
       .replace("{minutes}", String(minutes))
-      .replace("{summary}", sanitized);
+      .replace("{summary}", summary);
 
     await createFeedItemInternal({
       userId: `agent:${group}:${agent_name}`,
@@ -626,7 +625,9 @@ export async function getFeed(
   limit: number = 20
 ): Promise<{ items: FeedItem[]; next_cursor: number | null; has_more: boolean }> {
   return withRedis(async () => {
-    const maxScore = cursor ? String(cursor - 1) : "+inf";
+    // cursor를 inclusive로 사용하여 동일 타임스탬프 아이템 누락 방지
+    // 중복은 클라이언트에서 ID 기반으로 제거
+    const maxScore = cursor ? String(cursor) : "+inf";
 
     // limit+1개 조회하여 has_more 판단
     const results = await redis.zrevrangebyscore(
