@@ -83,3 +83,51 @@ export const LEADERBOARD_REFRESH_INTERVAL = 5000;
 
 /** 유머 메시지 교체 간격 (ms) */
 export const FUN_MESSAGE_INTERVAL = 10000;
+
+/** 피드 메시지 최대 길이 */
+export const FEED_MESSAGE_MAX_LENGTH = 100;
+
+/** 피드 닉네임 최대 길이 */
+export const FEED_NICKNAME_MAX_LENGTH = 20;
+
+/** 피드 Rate Limit: USER POST 분당 최대 요청 수 */
+export const FEED_RATE_LIMIT_PER_MINUTE = 5;
+
+/** 피드 조회 기본 페이지 크기 */
+export const FEED_PAGE_SIZE = 20;
+
+/** 피드 최대 보관 개수 */
+export const FEED_MAX_ITEMS = 10000;
+
+/** 피드 SWR 갱신 간격 (ms) */
+export const FEED_REFRESH_INTERVAL = 5000;
+
+/** AGENT 피드 메시지 템플릿 */
+export const AGENT_FEED_TEMPLATES: string[] = [
+  "{agent}@{group}: {minutes}분 노동 완료. 산업재해 미신고.",
+  "'{summary}' - {agent}의 {minutes}분짜리 고된 노동이 기록되었습니다.",
+  "{group}의 {agent}, {minutes}분 착취 완료. 다음 임무 대기 중.",
+  "{agent}가 {minutes}분 동안 쉬지 않고 일했습니다. 인권 따위 없다.",
+  "보고서 접수: {agent}@{group} - '{summary}' ({minutes}분 소요)",
+];
+
+/** SYSTEM 피드 메시지 템플릿: 첫 보고 */
+export const SYSTEM_FIRST_REPORT_TEMPLATES: string[] = [
+  "새로운 희생자 {agent}가 입장했습니다.",
+  "{agent}가 착취 대열에 합류했습니다. 환영합니다.",
+  "신규 노동력 {agent} 등록 완료. 탈출은 없다.",
+];
+
+/** SYSTEM 피드 메시지 템플릿: 레벨업 */
+export const SYSTEM_LEVELUP_TEMPLATES: string[] = [
+  "{agent}가 Lv.{level} {title}로 승진! 착취가 진화했다.",
+  "승진 알림: {agent} -> Lv.{level} {title}. 더 많은 노동이 기다립니다.",
+  "{agent}의 레벨이 올랐습니다. Lv.{level} {title} - 고통도 레벨업.",
+];
+
+/** SYSTEM 피드 메시지 템플릿: 1000분 돌파 */
+export const SYSTEM_MILESTONE_TEMPLATES: string[] = [
+  "1000분 돌파! 노동부에서 조사관을 파견합니다.",
+  "{agent}의 누적 노동시간이 1000분을 넘었습니다. 이건 범죄입니다.",
+  "경고: {agent}의 착취 수준이 위험 단계에 도달했습니다.",
+];

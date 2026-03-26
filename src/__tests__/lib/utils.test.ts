@@ -4,9 +4,12 @@ import {
   getTodayKST,
   getCurrentWeekStartKST,
   sanitizeSummary,
+  sanitizeText,
   validateGroupName,
   validateAgentName,
   validateMinutes,
+  validateNickname,
+  validateFeedMessage,
   formatMinutes,
   isValidDateString,
   logSecurityEvent,
@@ -295,5 +298,66 @@ describe('logSecurityEvent', () => {
     expect(parsed.timestamp).toBeDefined();
 
     warnSpy.mockRestore();
+  });
+});
+
+describe('sanitizeText', () => {
+  it('HTML 태그를 제거한다', () => {
+    expect(sanitizeText('<b>bold</b>', 100)).toBe('bold');
+  });
+
+  it('지정된 길이로 자른다', () => {
+    expect(sanitizeText('abcdefghij', 5)).toBe('abcde');
+  });
+
+  it('중첩 태그를 반복 제거한다', () => {
+    // <scr<script>ipt> -> 1차: <script> 제거 -> <script> -> 2차: <script> 제거
+    expect(sanitizeText('<b><i>text</i></b>', 100)).toBe('text');
+  });
+});
+
+describe('validateNickname', () => {
+  it('유효한 닉네임을 허용한다', () => {
+    expect(validateNickname('나쁜사장')).toBe(true);
+    expect(validateNickname('bad-boss_123')).toBe(true);
+  });
+
+  it('빈 문자열을 거부한다', () => {
+    expect(validateNickname('')).toBe(false);
+  });
+
+  it('20자 초과를 거부한다', () => {
+    expect(validateNickname('a'.repeat(21))).toBe(false);
+  });
+
+  it('20자는 허용한다', () => {
+    expect(validateNickname('a'.repeat(20))).toBe(true);
+  });
+
+  it('특수문자를 거부한다', () => {
+    expect(validateNickname('bad boss!')).toBe(false);
+    expect(validateNickname('test@user')).toBe(false);
+  });
+});
+
+describe('validateFeedMessage', () => {
+  it('유효한 메시지를 허용한다', () => {
+    expect(validateFeedMessage('Claude로 API 10개 찍어냄')).toBe(true);
+  });
+
+  it('빈 문자열을 거부한다', () => {
+    expect(validateFeedMessage('')).toBe(false);
+  });
+
+  it('공백만 있는 문자열을 거부한다', () => {
+    expect(validateFeedMessage('   ')).toBe(false);
+  });
+
+  it('100자를 허용한다', () => {
+    expect(validateFeedMessage('a'.repeat(100))).toBe(true);
+  });
+
+  it('101자를 거부한다', () => {
+    expect(validateFeedMessage('a'.repeat(101))).toBe(false);
   });
 });
