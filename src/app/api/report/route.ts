@@ -1,6 +1,6 @@
 // POST /api/report - 작업 보고 API
 import { NextRequest, NextResponse } from "next/server";
-import { submitReport, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { submitReport, checkRateLimit, trackApiCall, RedisConnectionError } from "@/lib/redis";
 import {
   validateGroupName,
   validateAgentName,
@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
       summary: sanitizeSummary(summary),
     });
 
+    trackApiCall("report");
     return NextResponse.json({
       success: true,
       agent: {

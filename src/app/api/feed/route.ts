@@ -1,6 +1,6 @@
 // GET/POST /api/feed - 피드 조회/작성 API
 import { NextRequest, NextResponse } from "next/server";
-import { createUserFeedItem, getFeed, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { createUserFeedItem, getFeed, checkRateLimit, trackApiCall, RedisConnectionError } from "@/lib/redis";
 import {
   validateNickname,
   validateFeedMessage,
@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await getFeed(cursor, limit);
+    trackApiCall("feed");
     return NextResponse.json(result);
   } catch (error) {
     console.error("[GET /api/feed] 오류:", error);
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
     const sanitizedMessage = sanitizeText(message.trim(), FEED_MESSAGE_MAX_LENGTH);
     const item = await createUserFeedItem(nickname, sanitizedMessage);
 
+    trackApiCall("feed-post");
     return NextResponse.json({ success: true, item });
   } catch (error) {
     console.error("[POST /api/feed] 오류:", error);

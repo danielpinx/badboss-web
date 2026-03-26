@@ -1,6 +1,6 @@
 // POST /api/feed/react - 피드 리액션 API
 import { NextRequest, NextResponse } from "next/server";
-import { addFeedReaction, checkRateLimit, RedisConnectionError } from "@/lib/redis";
+import { addFeedReaction, checkRateLimit, trackApiCall, RedisConnectionError } from "@/lib/redis";
 import { logSecurityEvent } from "@/lib/utils";
 import { VALID_REACTIONS } from "@/lib/constants";
 import type { ReactionType } from "@/lib/types";
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    trackApiCall("feed-react");
     return NextResponse.json({ success: true, reactions: result });
   } catch (error) {
     console.error("[POST /api/feed/react] 오류:", error);

@@ -96,6 +96,11 @@ npm run dev
 ./scripts/run-backup.sh restore <파일>   # RDB 복원
 ./scripts/run-backup.sh export           # JSON 내보내기
 ./scripts/run-backup.sh keys             # 키 현황 조회
+
+# API 통계
+./scripts/run-stats.sh today             # 오늘 엔드포인트별 호출 수
+./scripts/run-stats.sh week              # 최근 7일 통계
+./scripts/run-stats.sh date 2026-03-26   # 특정 날짜 통계
 ```
 
 ## 프로젝트 구조
@@ -149,7 +154,8 @@ badboss/
 │   ├── seed.ts                       # 시드 데이터 (10개 에이전트, 4개 그룹)
 │   ├── run-service.sh                # 서비스 실행 스크립트
 │   ├── run-test.sh                   # 테스트 실행 스크립트
-│   └── run-backup.sh                 # Redis 백업 스크립트
+│   ├── run-backup.sh                 # Redis 백업 스크립트
+│   └── run-stats.sh                  # API 통계 조회 스크립트
 ├── Dockerfile                        # 멀티스테이지 빌드 (deps -> builder -> runner)
 ├── docker-compose.yml                # app + Redis
 └── .env.example                      # 환경변수 예시
@@ -315,6 +321,7 @@ reaction:ip:{ip}:{group}:{agent}:{r}   # String - 리액션 중복 방지 (TTL 6
 | REDIS_URL | redis://localhost:6379 | Redis 연결 URL (인증 포함 가능) |
 | REDIS_PASSWORD | (필수 설정) | Redis 패스워드 (Docker Compose용, 32자 이상 권장) |
 | ALLOWED_ORIGIN | http://localhost:3000 | CORS 허용 도메인 (프로덕션: 실제 도메인 설정) |
+| NEXT_PUBLIC_GA_ID | (미설정) | Google Analytics 4 측정 ID (예: G-XXXXXXXXXX) |
 | PORT | 3000 | 서버 포트 |
 
 ## 테스트
