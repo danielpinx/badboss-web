@@ -10,9 +10,16 @@ const nextConfig: NextConfig = {
     const allowedOrigin = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
     // 개발 환경에서는 HMR을 위해 unsafe-eval 허용, 프로덕션에서는 제거
     const isDev = process.env.NODE_ENV === "development";
+    // GA4 사용 시 googletagmanager.com 도메인 허용
+    const gaHost = process.env.NEXT_PUBLIC_GA_ID
+      ? " https://www.googletagmanager.com https://www.google-analytics.com"
+      : "";
     const scriptSrc = isDev
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-      : "script-src 'self' 'unsafe-inline'";
+      ? `script-src 'self' 'unsafe-inline' 'unsafe-eval'${gaHost}`
+      : `script-src 'self' 'unsafe-inline'${gaHost}`;
+    const connectSrc = process.env.NEXT_PUBLIC_GA_ID
+      ? "connect-src 'self' https://www.google-analytics.com https://analytics.google.com"
+      : "connect-src 'self'";
 
     return [
       {
@@ -47,7 +54,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;`,
+              `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google-analytics.com; font-src 'self' data:; ${connectSrc};`,
           },
           // H-2: Cross-Origin-Opener-Policy
           {
