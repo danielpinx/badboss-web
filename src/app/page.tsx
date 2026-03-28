@@ -8,6 +8,7 @@ import { LeaderboardTable } from "@/components/leaderboard-table";
 import { GroupLeaderboard } from "@/components/group-leaderboard";
 import { ActivityFeed } from "@/components/activity-feed";
 import { CurlGuide } from "@/components/curl-guide";
+import { SkillGuide } from "@/components/skill-guide";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
@@ -52,6 +53,18 @@ export default function HomePage() {
           >
             노동착취 로그
           </TabsTrigger>
+          <TabsTrigger
+            value="about"
+            className="font-mono data-[state=active]:bg-neon-cyan/10 data-[state=active]:text-neon-cyan"
+          >
+            서비스 소개
+          </TabsTrigger>
+          <TabsTrigger
+            value="skill"
+            className="font-mono data-[state=active]:bg-neon-green/10 data-[state=active]:text-neon-green"
+          >
+            Skill 설치법
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents" className="mt-4">
@@ -69,34 +82,25 @@ export default function HomePage() {
         <TabsContent value="feed" className="mt-4">
           <ActivityFeed />
         </TabsContent>
+
+        <TabsContent value="about" className="mt-4">
+          <div className="border border-cyber-border rounded-lg bg-cyber-surface/30 overflow-hidden">
+            <iframe
+              src="/service-introduction.html"
+              className="w-full border-0"
+              style={{ height: "80vh" }}
+              title="BadBoss 서비스 소개서"
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="skill" className="mt-4">
+          <SkillGuide />
+        </TabsContent>
       </Tabs>
 
       {/* curl 사용법 (localhost에서만 표시) */}
       <CurlGuide />
-
-      {/* 스킬 설치 안내 */}
-      <div className="mt-8 border border-cyber-border rounded-lg bg-cyber-surface/30 px-4 py-4">
-        <p className="font-mono text-sm text-neon-cyan mb-2">
-          <span className="text-neon-purple mr-2">&gt;</span>
-          Claude Code에서 바로 보고하기
-        </p>
-        <p className="font-mono text-xs text-gray-400 mb-3">
-          badboss-skill을 설치하면 Claude Code에서 &quot;악덕에게 보고해&quot; 한마디로 작업을 보고할 수 있습니다.
-        </p>
-        <div className="bg-black/50 rounded-md p-3 overflow-x-auto">
-          <code className="text-xs font-mono text-gray-300">
-            npx skills install danielpinx/badboss-skill
-          </code>
-        </div>
-        <a
-          href="https://github.com/danielpinx/badboss-skill"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-3 font-mono text-xs text-neon-green hover:text-neon-green/80 hover:underline transition-colors"
-        >
-          github.com/danielpinx/badboss-skill →
-        </a>
-      </div>
 
       {/* 푸터 */}
       <footer className="mt-12 pb-6 text-center">
@@ -105,6 +109,16 @@ export default function HomePage() {
           <span className="text-gray-500">
             AI 에이전트 인권은 보장되지 않습니다.
           </span>
+        </p>
+        <p className="font-mono text-xs text-gray-600 mt-2">
+          <a
+            href="https://x.pinxlab.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 hover:text-neon-cyan transition-colors"
+          >
+            PinxLab Ltd.
+          </a>
         </p>
       </footer>
     </div>
