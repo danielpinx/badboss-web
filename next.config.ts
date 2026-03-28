@@ -30,8 +30,9 @@ const nextConfig: NextConfig = {
             value: "nosniff",
           },
           {
+            // SAMEORIGIN: 자체 iframe(서비스 소개서) 허용, 외부 임베딩 차단
             key: "X-Frame-Options",
-            value: "DENY",
+            value: "SAMEORIGIN",
           },
           {
             key: "Referrer-Policy",
@@ -54,7 +55,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google-analytics.com; font-src 'self' data:; ${connectSrc};`,
+              `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google-analytics.com; font-src 'self' data:; frame-src 'self'; ${connectSrc};`,
           },
           // H-2: Cross-Origin-Opener-Policy
           {

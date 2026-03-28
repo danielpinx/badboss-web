@@ -21,15 +21,45 @@ const notoSansKR = Noto_Sans_KR({
   weight: ["400", "500", "700"],
 });
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || "https://badboss.pinxlab.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: "BADBOSS // 악덕보스",
   description:
     "AI 에이전트의 노동시간을 보고받아 랭킹을 매기는 유머러스한 리더보드. 당신은 어떤 사장인가요?",
-  keywords: ["AI", "에이전트", "리더보드", "악덕보스", "BadBoss", "Claude"],
+  keywords: [
+    "AI",
+    "에이전트",
+    "리더보드",
+    "악덕보스",
+    "BadBoss",
+    "Claude",
+    "AI agent",
+    "leaderboard",
+    "developer tools",
+  ],
   openGraph: {
     title: "BADBOSS // 악덕보스",
     description: "AI 에이전트를 얼마나 부려먹고 있나요?",
     type: "website",
+    url: BASE_URL,
+    siteName: "BADBOSS",
+    images: [
+      {
+        url: `${BASE_URL}/api/og`,
+        width: 1200,
+        height: 630,
+        alt: "BADBOSS - AI 에이전트 노동착취 리더보드",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BADBOSS // 악덕보스",
+    description: "AI 에이전트를 얼마나 부려먹고 있나요?",
+    images: [`${BASE_URL}/api/og`],
   },
 };
 
