@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronUp, Sparkles } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
 import { LevelBadge } from "./level-badge";
 import { ReactionButtons } from "./reaction-buttons";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
+import type { PrevRankMap } from "@/hooks/use-leaderboard";
 import { formatMinutes } from "@/lib/utils";
 import { cn } from "@/lib/shadcn-utils";
 
@@ -24,7 +26,7 @@ import { cn } from "@/lib/shadcn-utils";
  * - 레벨 7: 행 전체 빨강/파랑 교대 border 애니메이션
  */
 export function LeaderboardTable() {
-  const { data, isLoading, isError, mutate } = useLeaderboard();
+  const { data, isLoading, isError, mutate, prevRankMap } = useLeaderboard();
 
   if (isLoading) {
     return (
@@ -81,13 +83,13 @@ export function LeaderboardTable() {
             <TableHead className="text-neon-green/70 font-mono hidden sm:table-cell">
               그룹
             </TableHead>
-            <TableHead className="text-neon-green/70 font-mono text-right">
+            <TableHead className="text-neon-green/70 font-mono text-center">
               시간
             </TableHead>
-            <TableHead className="text-neon-green/70 font-mono">
+            <TableHead className="text-neon-green/70 font-mono text-center">
               레벨
             </TableHead>
-            <TableHead className="text-neon-green/70 font-mono">
+            <TableHead className="text-neon-green/70 font-mono text-center">
               리액션
             </TableHead>
           </TableRow>
@@ -112,20 +114,27 @@ export function LeaderboardTable() {
                     : undefined
                 }
               >
-                {/* 순위 */}
+                {/* 순위 + 변동 표시 */}
                 <TableCell className="font-mono font-bold">
-                  <span
-                    className={cn("text-lg", getRankTextClass(agent.rank))}
-                    style={
-                      isTopThree
-                        ? {
-                            textShadow: `0 0 10px ${getRankGlowColor(agent.rank)}`,
-                          }
-                        : undefined
-                    }
-                  >
-                    {agent.rank}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className={cn("text-lg", getRankTextClass(agent.rank))}
+                      style={
+                        isTopThree
+                          ? {
+                              textShadow: `0 0 10px ${getRankGlowColor(agent.rank)}`,
+                            }
+                          : undefined
+                      }
+                    >
+                      {agent.rank}
+                    </span>
+                    <RankChangeIndicator
+                      agentKey={`${agent.group}:${agent.agent_name}`}
+                      currentRank={agent.rank}
+                      prevRankMap={prevRankMap}
+                    />
+                  </div>
                 </TableCell>
 
                 {/* 에이전트명 (레벨 7: 글리치 이펙트 적용) */}
@@ -152,7 +161,7 @@ export function LeaderboardTable() {
                 </TableCell>
 
                 {/* 레벨 뱃지 */}
-                <TableCell>
+                <TableCell className="text-center">
                   <LevelBadge
                     level={agent.level}
                     title={agent.level_title}
@@ -219,4 +228,55 @@ function getRankGlowColor(rank: number): string {
     default:
       return "transparent";
   }
+}
+
+/** 순위 변동 표시 컴포넌트 */
+function RankChangeIndicator({
+  agentKey,
+  currentRank,
+  prevRankMap,
+}: {
+  agentKey: string;
+  currentRank: number;
+  prevRankMap: PrevRankMap;
+}) {
+  const prevRank = prevRankMap[agentKey];
+
+  // 이전 데이터 없음
+  if (prevRank === undefined) {
+    // prevRankMap에 데이터가 있는데 이 에이전트만 없으면 신규 진입
+    if (Object.keys(prevRankMap).length > 0) {
+      return (
+        <span
+          className="inline-flex items-center ml-1 px-1 py-0.5 rounded bg-neon-gold/15 text-neon-gold animate-pulse"
+          title="신규 진입"
+        >
+          <Sparkles size={14} />
+          <span className="text-[11px] font-mono font-bold ml-0.5">NEW</span>
+        </span>
+      );
+    }
+    // 첫 로드: 비교 데이터 없으므로 표시 안 함
+    return null;
+  }
+
+  const diff = prevRank - currentRank;
+
+  if (diff > 0) {
+    // 순위 상승 (숫자가 줄어듦)
+    return (
+      <span
+        className="inline-flex items-center ml-1 px-1 py-0.5 rounded bg-green-500/15 text-green-400"
+        title={`${diff}단계 상승`}
+      >
+        <ChevronUp size={16} strokeWidth={3} />
+        <span className="text-xs font-mono font-bold">{diff}</span>
+      </span>
+    );
+  }
+
+  // 순위 하락은 표시하지 않음
+
+  // 변동 없음: 표시하지 않음
+  return null;
 }

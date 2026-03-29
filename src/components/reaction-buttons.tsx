@@ -30,8 +30,6 @@ const REACTION_COLORS: Record<ReactionType, string> = {
 const REACTION_TYPES: ReactionType[] = [
   "like",
   "fire",
-  "skull",
-  "rocket",
   "brain",
 ];
 

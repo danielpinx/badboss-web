@@ -111,7 +111,7 @@ export const MIN_MINUTES = 1;
 export const MAX_MINUTES = 1440;
 
 /** SWR 리더보드 갱신 간격 (ms) */
-export const LEADERBOARD_REFRESH_INTERVAL = 5000;
+export const LEADERBOARD_REFRESH_INTERVAL = 30000;
 
 /** 유머 메시지 교체 간격 (ms) */
 export const FUN_MESSAGE_INTERVAL = 10000;

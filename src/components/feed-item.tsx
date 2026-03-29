@@ -48,7 +48,7 @@ const REACTION_COLORS: Record<ReactionType, string> = {
   brain: "text-pink-500 hover:text-pink-400",
 };
 
-const REACTION_TYPES: ReactionType[] = ["like", "fire", "skull", "rocket", "brain"];
+const REACTION_TYPES: ReactionType[] = ["like", "fire", "brain"];
 
 interface FeedItemProps {
   item: FeedItemType;
