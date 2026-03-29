@@ -37,7 +37,8 @@ export function LevelBadge({
     <Badge
       variant="outline"
       className={cn(
-        "font-mono border whitespace-nowrap",
+        "font-mono border whitespace-nowrap inline-flex justify-start",
+        "min-w-[10rem] sm:min-w-[12.5rem]",
         sizeClass,
         colorClass,
         isMaxLevel && "animate-pulse-neon"

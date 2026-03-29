@@ -11,8 +11,8 @@
 
 set -euo pipefail
 
-#BADBOSS_URL="${BADBOSS_URL:-http://localhost:3000}"
-BADBOSS_URL="${BADBOSS_URL:-https://badboss.pinxlab.com}"
+BADBOSS_URL="${BADBOSS_URL:-http://localhost:3000}"
+#BADBOSS_URL="${BADBOSS_URL:-https://badboss.pinxlab.com}"
 LOG_PREFIX="[$(date '+%Y-%m-%d %H:%M:%S')]"
 
 log() { echo "$LOG_PREFIX $1"; }
